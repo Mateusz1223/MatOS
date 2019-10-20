@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define UNUSED(a) (void)(a)
 
