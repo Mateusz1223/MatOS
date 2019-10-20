@@ -76,9 +76,13 @@ call load_kernel
 mov ecx, eax
 
 sti
+push edi ; SizeOfImage
+push edx ; ImageBase
+
 mov eax, 0x2BADB002 ;multiboot magic number
 lea ebx, [boot_info]
 push ebx
+
 call ecx ;call kernel
 
 times 1024-($-$$) db 0

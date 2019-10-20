@@ -16,7 +16,7 @@ struct memory_map {
 	memory_map_entry *map;
 } memory_map;
 
-void memory_init(multiboot_info *bootinfo);
+void memory_init(multiboot_info *bootinfo, int KernelBase, int KernelImgSize);
 
 void *memory_alloc_block();
 

@@ -96,17 +96,26 @@ static void init_regions()
 	{
 		if(memory_map.map[i].type==1 && memory_map.map[i].baseAddress>0x000FFFFF)
 		{
-			int base = memory_map.map[i].baseAddress/4096+1;
-			int limit = memory_map.map[i].length/4096;
+			int base = memory_map.map[i].baseAddress/AMM_BLOCK_SIZE;
+			if(memory_map.map[i].baseAddress%AMM_BLOCK_SIZE != 0)
+				base++;
+			int limit = memory_map.map[i].length/AMM_BLOCK_SIZE;
+
 			amm_unset_multiple(base, limit);
 			used_blocks = used_blocks-limit;
 		}
 	}
 }
 
-static void alocate_kernel_executable()
+static void alocate_kernel_executable(int KernelBase, int KernelImgSize)
 {
-	//to do
+	int base = KernelBase/AMM_BLOCK_SIZE;
+	int limit = KernelImgSize/AMM_BLOCK_SIZE;
+	if(KernelImgSize%AMM_BLOCK_SIZE != 0)
+		limit++;
+
+	amm_set_multiple(base, limit);
+	used_blocks = used_blocks+limit;
 }
 
 
@@ -121,7 +130,7 @@ static void print_memory_map_entry(memory_map_entry *map_entry)
 
 
 
-void memory_init(multiboot_info *bootinfo)
+void memory_init(multiboot_info *bootinfo, int KernelBase, int KernelImgSize)
 {
 	memory_map.length = bootinfo->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
 	memory_map.map = bootinfo->mmap_addr;
@@ -136,7 +145,7 @@ void memory_init(multiboot_info *bootinfo)
 
 	init_regions();
 
-	alocate_kernel_executable();
+	alocate_kernel_executable(KernelBase, KernelImgSize);
 
 	screen_print("\nFree blocks: %d", get_free_block_count());
 }
