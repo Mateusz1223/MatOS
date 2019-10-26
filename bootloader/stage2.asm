@@ -10,29 +10,9 @@ jmp start
 
 
 boot_info:
-istruc multiboot_info
-	at multiboot_info.flags,			dd 0
-	at multiboot_info.memoryLo,			dd 0
-	at multiboot_info.memoryHi,			dd 0
-	at multiboot_info.bootDevice,		dd 0
-	at multiboot_info.cmdLine,			dd 0
-	at multiboot_info.mods_count,		dd 0
-	at multiboot_info.mods_addr,		dd 0
-	at multiboot_info.syms0,			dd 0
-	at multiboot_info.syms1,			dd 0
-	at multiboot_info.syms2,			dd 0
-	at multiboot_info.mmap_length,		dd 0
-	at multiboot_info.mmap_addr,		dd 0x00002548 ; start of fifth byte in 0x00000500-0x00007BFF region (free for use, almost 30KiB)
-	at multiboot_info.drives_length,	dd 0
-	at multiboot_info.drives_addr,		dd 0
-	at multiboot_info.config_table,		dd 0
-	at multiboot_info.bootloader_name,	dd 0
-	at multiboot_info.apm_table,		dd 0
-	at multiboot_info.vbe_control_info,	dd 0
-	at multiboot_info.vbe_mode_info,	dw 0
-	at multiboot_info.vbe_interface_seg,dw 0
-	at multiboot_info.vbe_interface_off,dw 0
-	at multiboot_info.vbe_interface_len,dw 0
+istruc bootinfo
+	at bootinfo.mmap_length,		dd 0
+	at bootinfo.mmap_addr,			dd 0x00002548 ; start of fifth byte in 0x00000500-0x00007BFF region (free for use, almost 30KiB)
 iend
 
 start:
@@ -46,7 +26,7 @@ call BiosGetMemoryMap
 mov eax, 24
 mul bp
 
-mov dword [boot_info+multiboot_info.mmap_length], eax
+mov dword [boot_info+bootinfo.mmap_length], eax
 
 ;load gdt
 lgdt [GDT_ADRESS]
@@ -75,11 +55,11 @@ call enable_a20
 call load_kernel
 mov ecx, eax
 
-sti
-push edi ; SizeOfImage
-push edx ; ImageBase
+mov dword [boot_info+bootinfo.kernel_base], edx
+mov dword [boot_info+bootinfo.kernel_img_size], edi
 
-mov eax, 0x2BADB002 ;multiboot magic number
+sti
+
 lea ebx, [boot_info]
 push ebx
 

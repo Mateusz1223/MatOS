@@ -1,10 +1,10 @@
 #include "include/kernel.h"
 
-void _start(multiboot_info* bootinfo, int KernelBase, int KernelImgSize)// KernelBase - ImageBase, KernelImgSize - SizeOfImage
+void _start(bootinfo* boot_info)// KernelBase - ImageBase, KernelImgSize - SizeOfImage
 {
 	screen_init();
 	idt_init();
-	memory_init(bootinfo, KernelBase, KernelImgSize);
+	memory_init(boot_info);
 	
 	//screen_print("%s\n", keyboard_scan_input());
 		

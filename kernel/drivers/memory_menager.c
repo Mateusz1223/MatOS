@@ -130,10 +130,10 @@ static void print_memory_map_entry(memory_map_entry *map_entry)
 
 
 
-void memory_init(multiboot_info *bootinfo, int KernelBase, int KernelImgSize)
+void memory_init(bootinfo *boot_info)
 {
-	memory_map.length = bootinfo->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
-	memory_map.map = bootinfo->mmap_addr;
+	memory_map.length = boot_info->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
+	memory_map.map = boot_info->mmap_addr;
 
 	print_memory_map();
 
@@ -145,7 +145,7 @@ void memory_init(multiboot_info *bootinfo, int KernelBase, int KernelImgSize)
 
 	init_regions();
 
-	alocate_kernel_executable(KernelBase, KernelImgSize);
+	alocate_kernel_executable(boot_info->kernel_base, boot_info->kernel_img_size);
 
 	screen_print("\nFree blocks: %d", get_free_block_count());
 }

@@ -1,6 +1,6 @@
 #include "include/common.h"
 #include "include/screen.h"
-#include "include/multiboot.h"
+#include "include/bootinfo.h"
 
 //definition of structure
 typedef struct memory_map_entry {
@@ -16,7 +16,7 @@ struct memory_map {
 	memory_map_entry *map;
 } memory_map;
 
-void memory_init(multiboot_info *bootinfo, int KernelBase, int KernelImgSize);
+void memory_init(bootinfo *boot_info);
 
 void *memory_alloc_block();
 
