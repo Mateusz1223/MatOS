@@ -36,6 +36,13 @@ mov dh, 0
 ;mov dl, 0 ; Set by BIOS
 int 13h 
 
+;http://www.ctyme.com/intr/rb-0091.htm
+;set 0. display page
+xor eax, eax
+mov ah, 0x05
+mov al, 0
+int 10h
+
 cli
 
 jmp dword 0x0000:0x0500 ;jump stage2

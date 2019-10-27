@@ -4,18 +4,23 @@ org 0500h
 jmp start
 
 %include "bootloader\common.inc"
-%include "bootloader\multiboot.inc"
+%include "bootloader\bootinfo.inc"
 %include "bootloader\gdt.inc"
 %include "bootloader\detect_memory.inc"
 
 
 boot_info:
 istruc bootinfo
-	at bootinfo.mmap_length,		dd 0
 	at bootinfo.mmap_addr,			dd 0x00002548 ; start of fifth byte in 0x00000500-0x00007BFF region (free for use, almost 30KiB)
 iend
 
 start:
+
+sti
+xor eax, eax
+int 11h
+mov word [boot_info+bootinfo.BIOS_equipment_list], ax
+cli
 
 mov eax, 0x0
 mov ds, ax ;dubts !!!!!
@@ -35,7 +40,6 @@ or 	eax, 1
 mov cr0, eax
 
 jmp dword 0x8:start_32
-
 
 
 start_32:

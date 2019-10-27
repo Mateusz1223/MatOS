@@ -275,12 +275,16 @@ void screen_enable_cursor()
 	Cursor.enabled = 1;
 }
 
-void screen_init(void)
+void screen_init(bootinfo* boot_info)
 {
+	Screen.height = 25;
+	if((boot_info->BIOS_equipment_list & 0x30)>>4 == 0x2)
+		Screen.width = 80;
+	else if((boot_info->BIOS_equipment_list & 0x30)>>4 == 0x1)
+		Screen.width = 40;
+
 	Cursor.x = 0;
 	Cursor.y = 0;
-	Screen.width = 80;
-	Screen.height = 25;
 	Screen.color = 0x0a;
 	Screen.textram = (unsigned char *)0xb8000;
 	Cursor.VGA_IO_Port_RegisterIndex = 0x3d4;

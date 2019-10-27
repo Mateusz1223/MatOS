@@ -1,6 +1,7 @@
 #pragma once
 #include "include/common.h"
 #include "include/HAL.h"
+#include "include/bootinfo.h"
 
 //usage of colors COLOR/BACKGROUND_COLOR | BLINKING
 
@@ -36,7 +37,7 @@
 #define BLINKING 0x80
 
 
-void screen_init(void);
+void screen_init(bootinfo* boot_info);
 
 void screen_set_cursor_position( int x, int y );
 void screen_get_cursor_position( int *x, int *y );
