@@ -1,7 +1,7 @@
 #pragma once
-#include "include/common.h"
-#include "include/int_asm_handlers.h"
-#include "include/PIC.h"
+#include "inc/common.h"
+#include "inc/interrupts/int_asm_handlers.h"
+#include "inc/drivers/PIC.h"
 
 //#pragma pack(push,1)
 struct IDTEntry

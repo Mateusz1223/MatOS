@@ -1,7 +1,7 @@
 #pragma once
-#include "include/common.h"
-#include "include/HAL.h"
-#include "include/bootinfo.h"
+#include "inc/common.h"
+#include "inc/HAL.h"
+#include "inc/bootinfo.h"
 
 //usage of colors COLOR/BACKGROUND_COLOR | BLINKING
 

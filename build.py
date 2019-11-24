@@ -19,7 +19,7 @@ def fix_stage1():
 		f.write(d)
 
 def create_compile_kernel_cmd():
-	cmd = "gcc -Ikernel -std=c99 -mno-ms-bitfields -masm=intel -m32 -nostdlib -o build\kernel kernel\kernel.c" #For more warnings -Wall -Wextra 
+	cmd = "gcc -Ikernel -std=c99 -mno-ms-bitfields -masm=intel -m32 -nostdlib -o build\kernel kernel\src\kernel.c" #For more warnings -Wall -Wextra 
 
 	for root, directories, filenames in os.walk("kernel"): 
 		for filename in filenames:
@@ -63,11 +63,11 @@ def main():
 			buf.append("\0" * padding_size);
 
 	try:
-		os.remove("build\\floppy.bin")
+		os.remove("build\\floppy.raw")
 	except:
 		print("")
 
-	with open("build\\floppy.bin", "ab") as f:
+	with open("build\\floppy.raw", "ab") as f:
 		for b in buf:
 			f.write(b)
 

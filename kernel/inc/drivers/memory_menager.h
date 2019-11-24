@@ -1,6 +1,5 @@
-#include "include/common.h"
-#include "include/screen.h"
-#include "include/bootinfo.h"
+#include "inc/common.h"
+#include "inc/bootinfo.h"
 
 //definition of structure
 typedef struct memory_map_entry {

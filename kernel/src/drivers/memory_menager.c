@@ -1,4 +1,6 @@
-#include "include/memory_menager.h"
+#include "inc/drivers/memory_menager.h"
+
+#include "inc/drivers/screen.h"
 
 //AMM- allocation_memory_map
 // 8 blocks per byte
@@ -135,7 +137,7 @@ void memory_init(bootinfo *boot_info)
 	memory_map.length = boot_info->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
 	memory_map.map = boot_info->mmap_addr;
 
-	print_memory_map();
+	//print_memory_map();
 
 	memset(allocation_memory_map, 0xff, 131072);
 
@@ -147,7 +149,9 @@ void memory_init(bootinfo *boot_info)
 
 	alocate_kernel_executable(boot_info->kernel_base, boot_info->kernel_img_size);
 
-	screen_print("\nFree blocks: %d", get_free_block_count());
+	//screen_print("\nFree blocks: %d", get_free_block_count());
+
+	screen_print("Memory ready!\n");
 }
 
 void *memory_alloc_block()

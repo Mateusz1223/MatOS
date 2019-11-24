@@ -1,5 +1,5 @@
 #pragma once
-#include "include/common.h"
+#include "inc/common.h"
 
 void outb( uint16_t port, uint8_t data);
 void outw( uint16_t port, uint16_t data);

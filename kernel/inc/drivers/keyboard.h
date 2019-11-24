@@ -1,8 +1,8 @@
 #pragma once
-#include "include/common.h"
-#include "include/HAL.h"
-#include "include/screen.h"
-#include "include/idt.h"
+#include "inc/common.h"
+#include "inc/HAL.h"
+#include "inc/drivers/screen.h"
+#include "inc/interrupts/idt.h"
 
 unsigned char task;
 

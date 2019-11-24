@@ -1,4 +1,4 @@
-#include "include/common.h"
+#include "inc/common.h"
 
 void *memmove (void *dest, const void *src, size_t size)
 {

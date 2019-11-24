@@ -1,4 +1,7 @@
-#include "include/idt.h"
+#include "inc/interrupts/idt.h"
+
+#include "inc/drivers/screen.h"
+
 
 #define SETIDTDESCR(d, offset) { \
 	d.offset_0_15 = ((uint32_t)offset & 0xffff); \
@@ -62,4 +65,6 @@ void idt_init()
 		SETIDTDESCR(IDT[i+32], irq_handler);
 	
 	__asm("lidt [%0]" : : "r"(&ptr));
+
+	screen_print("Interrupts initialized!\n");
 }

@@ -1,4 +1,4 @@
-#include "include/int_handler.h"
+#include "inc/interrupts/int_handler.h"
 
 char *int_reasons[32] ={
 	"Divide Error",

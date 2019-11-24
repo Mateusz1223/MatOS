@@ -1,6 +1,6 @@
 #pragma once
-#include "include/common.h"
-#include "include/HAL.h"
+#include "inc/common.h"
+#include "inc/HAL.h"
 
 void PIC_sendEOI(unsigned char irq);
 

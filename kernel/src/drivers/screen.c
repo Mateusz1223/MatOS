@@ -1,4 +1,4 @@
-#include "include/screen.h"
+#include "inc/drivers/screen.h"
 
 static struct CursorStruct
 {
@@ -292,4 +292,5 @@ void screen_init(bootinfo* boot_info)
 	Cursor.enabled = 1;
 
 	screen_clear();
+	screen_print("Screen initialized!\n");
 }
