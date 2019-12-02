@@ -61,13 +61,13 @@ static void amm_unset(int bit)
  	allocation_memory_map[bit / 32] &= ~ (1 << (bit % 32));
 }
 
-static void amm_set_multiple(int base, int limit)
+static void amm_set_multiple(int base, int limit) //to be speed up
 {
  	for(int i=base; i<base+limit; i++)
  		amm_set(i);
 }
 
-static void amm_unset_multiple(int base, int limit)
+static void amm_unset_multiple(int base, int limit) //to be speed up
 {
  	for(int i=base; i<base+limit; i++)
 		amm_unset(i);

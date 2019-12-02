@@ -1,5 +1,7 @@
 #include "inc/drivers/PIC.h"
 
+#include "inc/HAL.h"
+
 //https://wiki.osdev.org/8259_PIC
 
 #define PIC1_COMMAND	0x20
@@ -9,7 +11,7 @@
 
 #define PIC_EOI		0x20		// End-of-interrupt command code
 
-void PIC_sendEOI(unsigned char irq)
+void PIC_sendEOI(uint8_t irq)
 {
 	if(irq >= 8)
 		outb(PIC2_COMMAND, PIC_EOI);
@@ -48,7 +50,7 @@ void PIC_remap(int offset1, int offset2)
 	outb(PIC2_DATA, mask2);
 }
 
-void IRQ_set_mask(unsigned char IRQline)
+void IRQ_set_mask(uint8_t IRQline)
 {
 	uint16_t port;
 	uint8_t value;
@@ -65,7 +67,7 @@ void IRQ_set_mask(unsigned char IRQline)
 	outb(port, value);
 }
 
-void IRQ_clear_mask(unsigned char IRQline)
+void IRQ_clear_mask(uint8_t IRQline)
 {
 	uint16_t port;
 	uint8_t value;

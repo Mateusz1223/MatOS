@@ -1,7 +1,5 @@
 #pragma once
 #include "inc/common.h"
-#include "inc/drivers/PIC.h"
-#include "inc/drivers/keyboard.h"
 
 typedef struct TrapFrame {
 	uint32_t EDI;

@@ -1,5 +1,7 @@
 #include "inc/drivers/busses/ATA.h"
 
+#include "inc/drivers/screen.h"
+
 //http://www.osdever.net/tutorials/view/lba-hdd-access-via-pio
 
 void ATA_check()

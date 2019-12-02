@@ -99,17 +99,3 @@ load_kernel: ; ret eax = entry point , edx = ImageBase, edi = SizeOfImage
   pop edi ; edi = SizeOfImage
 
   ret
-
-print_something32: ;remove later
-
-  lea eax, [0xb8000]  ; mov eax, 0xb8000
-  
-  mov dword [eax], 0x41414141
-
-  jmp $
-
-  ret
-
-[bits 16]
-
-

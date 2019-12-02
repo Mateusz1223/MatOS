@@ -1,5 +1,9 @@
 #include "inc/interrupts/int_handler.h"
 
+#include "inc/drivers/PIC.h"
+#include "inc/drivers/screen.h"
+#include "inc/drivers/keyboard.h"
+
 char *int_reasons[32] ={
 	"Divide Error",
 	"Debug Exception",
@@ -71,7 +75,7 @@ void pic_handler()
 	
 	if(irq_num == 1)
 	{
-		keyboard_driver();
+		keyboard_irq();
 	}
 	
 	PIC_sendEOI(irq_num);

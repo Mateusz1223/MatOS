@@ -1,5 +1,7 @@
 #include "inc/drivers/screen.h"
 
+#include "inc/HAL.h"
+
 static struct CursorStruct
 {
 	int x;
@@ -176,8 +178,7 @@ void screen_set_cursor_position( int x, int y)
 	}
 	else if(x < Screen.width && y >= Screen.height)
 	{
-		Cursor.x = 0;
-		Cursor.y = 0;
+		screen_clear();
 	}
 }
 
@@ -194,7 +195,6 @@ void screen_clear()
 	for(i=0; i<n; i+=2)
 	{
 		Screen.textram[i]=' ';
-		Screen.textram[i+1]=Screen.color;
 	}
 	screen_set_cursor_position(0, 0);
 }
@@ -285,7 +285,7 @@ void screen_init(bootinfo* boot_info)
 
 	Cursor.x = 0;
 	Cursor.y = 0;
-	Screen.color = 0x0a;
+	Screen.color = LIGH_GREEN;
 	Screen.textram = (unsigned char *)0xb8000;
 	Cursor.VGA_IO_Port_RegisterIndex = 0x3d4;
 	Cursor.VGA_IO_Port_DataRegister = 0x3d5;

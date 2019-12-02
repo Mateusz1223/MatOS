@@ -1,4 +1,3 @@
-#include "inc/common.h"
 #include "inc/HAL.h"
 
 void outb( uint16_t port, uint8_t data )
