@@ -9,7 +9,8 @@ MatOS uses `.exe` file as a kernel so it has to be compiled under windows. Howev
 To compile MatOS type: 
 
 `mkdir build`
-`python build.py`
+
+`python build.py` (must be python 3)
 
 Note that build.py script uses programs such as `nasm`, `strip` or `gcc`. They need to be in `PATH`. It also reference to files using relative pathes so you have to run it from prioject main folder.
 

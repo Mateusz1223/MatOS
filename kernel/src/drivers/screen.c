@@ -21,73 +21,123 @@ static struct ScreenStruct
 
 //___________________________________________________________________________________________________
 
+static void scroll_page();
+
+static void cursor_new_line() //I'm not sure if it should update 
+{
+	int y = Cursor.y + 1;
+
+	if(y >= Screen.height)
+		scroll_page();
+	else
+	{
+		Cursor.x = 0;
+		Cursor.y = y;
+	}
+}
+
+static void cursor_next_position() //I'm not sure if it should update 
+{
+	int x = Cursor.x + 1;
+
+	if(x >= Screen.width)
+		cursor_new_line();
+	else
+		Cursor.x = x;
+}
+
+
+static void cursor_get_position( int *x, int *y)
+{
+	*x = Cursor.x;
+	*y = Cursor.y;
+}
+
+static void cursor_update()
+{
+	uint16_t pos = Cursor.y * Screen.width + Cursor.x;
+	
+	outb(Cursor.VGA_IO_Port_RegisterIndex, 0xf);
+	outb(Cursor.VGA_IO_Port_DataRegister, (uint8_t)(pos & 0xff));
+	
+	outb(Cursor.VGA_IO_Port_RegisterIndex, 0xe);
+	outb(Cursor.VGA_IO_Port_DataRegister, (uint8_t)((pos >> 8) & 0xff));
+	
+	if(Cursor.enabled)
+		Screen.textram[(Cursor.y * Screen.width + Cursor.x)*2 + 1] = Screen.color;
+}
+
+//___________________________________________________________________________________________________
+
+static void scroll_page()
+{
+	int max_pos = Screen.height*Screen.width*2;
+
+	int start_copy = Screen.height/2;
+	start_copy *= Screen.width*2;
+
+	memmove(Screen.textram, &Screen.textram[start_copy], max_pos - start_copy);
+
+	for(int i=max_pos-start_copy; i<max_pos; i+=2)
+	{
+		Screen.textram[i] = ' ';
+		Screen.textram[i+1] = BACKGROUND_BLACK;
+	}
+
+	Cursor.x = 0;
+	Cursor.y = (max_pos-start_copy)/(Screen.width*2);
+	cursor_update();
+}
+
+//___________________________________________________________________________________________________
+
 static void put_character(char ch)
 {
 	switch(ch)
 		{
-			if(Cursor.enabled != 0)
-				{
-					case '\n':
-					{
-						int x, y;
-						screen_get_cursor_position(&x, &y);
-						y+=1;
-						Cursor.x=0;
-						Cursor.y=y;
-						break;
-					}
-					
-					case '\r':
-					{
-						int x, y;
-						screen_get_cursor_position(&x, &y);
-						Cursor.x=0;
-						Cursor.y=y;
-						break;
-					}
-				}
+			case '\n':
+			{
+				int x, y;
+				cursor_get_position(&x, &y);
+				cursor_new_line();
+				break;
+			}
 			
+			case '\r':
+			{
+				int x, y;
+				cursor_get_position(&x, &y);
+				cursor_new_line();
+				break;
+			}
+		
 			case '\t':
 			{
-				if(Cursor.enabled != 0)
+				for(int i=0; i<4; i++)
 				{
 					int x, y;
-					screen_get_cursor_position(&x, &y);
+					cursor_get_position(&x, &y);
+					int pos = (y * Screen.width + x)*2;
 					
-					if(x>76)
-					{
-						y+=1;
-						Cursor.x=0;
-						Cursor.y=y;
-					}
-					else
-					{
-						x+=4;
-						Cursor.x=x;
-						Cursor.y=y;
-					}
-					break;
+					Screen.textram[pos] = ' ';
+					Screen.textram[pos+1] = Screen.color;
+
+					cursor_next_position();
 				}
+				break;
 			}
 			
 			default:
-				if(Cursor.enabled != 0)
-				{
-					int pos = (Cursor.y * Screen.width + Cursor.x)*2;
-					int new_x = Cursor.x+1;
-					int new_y = Cursor.y;
-					if(new_x == Screen.width)
-					{
-						new_x = 0;
-						new_y += 1;
-					}
-					
-					Screen.textram[pos] = ch;
-					Screen.textram[pos+1] = Screen.color;
+			{
+				int x, y;
+				cursor_get_position(&x, &y);
+				int pos = (y * Screen.width + x)*2;
+				
+				Screen.textram[pos] = ch;
+				Screen.textram[pos+1] = Screen.color;
 
-					Cursor.x=new_x;
-					Cursor.y=new_y;
-				}
+				cursor_next_position();
+			}
 		}
 }
 
@@ -159,44 +209,18 @@ static void print_hex( unsigned int d ) //Seem to be fine but used to crush syst
 
 //___________________________________________________________________________________________________
 
-void screen_set_cursor_position( int x, int y)
-{
-	if(x < Screen.width && y < Screen.height)
-	{
-		uint16_t pos = y * Screen.width + x;
-		
-		outb(Cursor.VGA_IO_Port_RegisterIndex, 0xf);
-		outb(Cursor.VGA_IO_Port_DataRegister, (uint8_t)(pos & 0xff));
-		
-		outb(Cursor.VGA_IO_Port_RegisterIndex, 0xe);
-		outb(Cursor.VGA_IO_Port_DataRegister, (uint8_t)((pos >> 8) & 0xff));
-		
-		Cursor.x=x;
-		Cursor.y=y;
-		
-		Screen.textram[(y * Screen.width + x)*2 + 1] = Screen.color;
-	}
-	else if(x < Screen.width && y >= Screen.height)
-	{
-		screen_clear();
-	}
-}
-
-void screen_get_cursor_position( int *x, int *y)
-{
-	*x = Cursor.x;
-	*y = Cursor.y;
-}
-
 void screen_clear()
 {
 	int n=Screen.height*Screen.width*2;
 	int i;
 	for(i=0; i<n; i+=2)
 	{
-		Screen.textram[i]=' ';
+		Screen.textram[i] = ' ';
+		Screen.textram[i+1] = BACKGROUND_BLACK;
 	}
-	screen_set_cursor_position(0, 0);
+	Cursor.x = 0;
+	Cursor.y = 0;
+	cursor_update();
 }
 
 void screen_putchar( char ch )
@@ -207,7 +231,7 @@ void screen_putchar( char ch )
 	screen_print(str);
 }
 
-void screen_print( const char *str, ... )//Doesn't work propertly. To be fixed (Mixes order witch few arguments eg. "%x %x %x" in memory_menager.c) 
+void screen_print( const char *str, ... ) // Doesn't work propertly. To be fixed (Mixes order witch few arguments eg. "%x %x %x" in memory_menager.c) 
 {
 	va_list args;
 	va_start(args, str);
@@ -246,7 +270,7 @@ void screen_print( const char *str, ... )//Doesn't work propertly. To be fixed (
 	
 	va_end(args);
 
-	screen_set_cursor_position(Cursor.x, Cursor.y);
+	cursor_update();
 }
 
 void screen_set_color( char ch)
@@ -262,6 +286,8 @@ void screen_disable_cursor()
 	outb(Cursor.VGA_IO_Port_DataRegister, 0x20);
 	
 	Cursor.enabled = 0;
+
+	Screen.textram[(Cursor.y * Screen.width + Cursor.x)*2 + 1] = BLACK;
 }
 
 void screen_enable_cursor()
@@ -273,6 +299,8 @@ void screen_enable_cursor()
 	outb(Cursor.VGA_IO_Port_DataRegister, (inb(0x3E0) & 0xE0) | 17);
 	
 	Cursor.enabled = 1;
+
+	Screen.textram[(Cursor.y * Screen.width + Cursor.x)*2 + 1] = Screen.color;
 }
 
 void screen_init(bootinfo* boot_info)

@@ -38,9 +38,6 @@
 
 void screen_init(bootinfo* boot_info);
 
-void screen_set_cursor_position( int x, int y );
-void screen_get_cursor_position( int *x, int *y );
-
 void screen_clear();
 void screen_putchar( char ch );
 void screen_print( const char *str, ...);
