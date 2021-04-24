@@ -23,7 +23,7 @@ static struct ScreenStruct
 
 static void scroll_page();
 
-static void cursor_new_line() //I'm not sure if it should update 
+static void cursor_new_line()
 {
 	int y = Cursor.y + 1;
 
@@ -36,7 +36,7 @@ static void cursor_new_line() //I'm not sure if it should update
 	}
 }
 
-static void cursor_next_position() //I'm not sure if it should update 
+static void cursor_next_position()
 {
 	int x = Cursor.x + 1;
 
