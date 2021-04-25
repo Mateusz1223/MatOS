@@ -225,9 +225,9 @@ void screen_clear()
 
 void screen_putchar( char ch )
 {
-	char *str;
+	char str[2];
 	str[0] = ch;
-	str[1] = '\0';
+	str[1] = 0;
 	screen_print(str);
 }
 

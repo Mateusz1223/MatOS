@@ -13,12 +13,13 @@ void _start(bootinfo* boot_info)
 	screen_print("...\n");
 	memory_init(boot_info);
 	screen_print("...\n");
-
-	keyboard_init(); //disables keyboard interrupts
+	keyboard_init();
+	screen_print("...\n\n");
 
 	screen_set_color(BACKGROUND_RED);
 	screen_print("This kernel is under development and doesn't\nprovide any functionalities yet. :-(\n");
-	screen_disable_cursor();
+	//screen_disable_cursor();
+	screen_set_color(GREEN);
 
 	for(;;);
 }
