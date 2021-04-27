@@ -1,12 +1,12 @@
 #include "inc/drivers/busses/ATA.h"
 
-#include "inc/drivers/screen.h"
+#include "inc/UI/terminal.h"
 
 //http://www.osdever.net/tutorials/view/lba-hdd-access-via-pio
 
 void ATA_check()
 {
-	screen_print("ATA check:\n");
+	terminal_print(debugTerminal, "ATA check:\n");
 
 	outb(0x1F6, 0xA0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -16,10 +16,10 @@ void ATA_check()
 
 	if (tmpword & 0x40) // see if the busy bit is set
 	{
-		screen_print("Primary master exists\n");
+		terminal_print(debugTerminal, "Primary master exists\n");
 	}else
 	{
-		screen_print("Primary master does not exists\n");
+		terminal_print(debugTerminal, "Primary master does not exists\n");
 	}
 
 	outb(0x1F6, 0xB0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
@@ -30,10 +30,10 @@ void ATA_check()
 
 	if (tmpword & 0x40) // see if the busy bit is set
 	{
-		screen_print("Primary slave exists\n");
+		terminal_print(debugTerminal, "Primary slave exists\n");
 	}else
 	{
-		screen_print("Primary slave does not exists\n");
+		terminal_print(debugTerminal, "Primary slave does not exists\n");
 	}
 
 
@@ -47,10 +47,10 @@ void ATA_check()
 
 	if (tmpword & 0x40) // see if the busy bit is set
 	{
-		screen_print("Secondary master exists\n");
+		terminal_print(debugTerminal, "Secondary master exists\n");
 	}else
 	{
-		screen_print("Secondary master does not exists\n");
+		terminal_print(debugTerminal, "Secondary master does not exists\n");
 	}
 
 	outb(0x176, 0xB0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
@@ -61,9 +61,9 @@ void ATA_check()
 
 	if (tmpword & 0x40) // see if the busy bit is set
 	{
-		screen_print("Secondary slave exists\n");
+		terminal_print(debugTerminal, "Secondary slave exists\n");
 	}else
 	{
-		screen_print("Secondary slave does not exists\n\n");
+		terminal_print(debugTerminal, "Secondary slave does not exists\n\n");
 	}
 }

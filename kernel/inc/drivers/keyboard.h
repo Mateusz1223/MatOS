@@ -18,6 +18,8 @@
 
 Keyboard_buffer Nullbuffer; */
 
+char keyIdLookUpTable[];
+
 void keyboard_init(); // to do
 
 void keyboard_irq(); // to do

@@ -1,6 +1,7 @@
 #include "inc/drivers/memory_menager.h"
 
-#include "inc/drivers/screen.h"
+#include "inc/UI/terminal.h"
+#include "inc/drivers/VGA.h"
 
 //AMM- allocation_memory_map
 // 8 blocks per byte
@@ -123,11 +124,11 @@ static void alocate_kernel_executable(int KernelBase, int KernelImgSize)
 
 static void print_memory_map_entry(memory_map_entry *map_entry)
 {
-	screen_print("%x | ", map_entry->baseAddress);
-	screen_print("%x | ", map_entry->length);
-	screen_print("%x\n", map_entry->type);
+	terminal_print(debugTerminal, "%x | ", map_entry->baseAddress);
+	terminal_print(debugTerminal, "%x | ", map_entry->length);
+	terminal_print(debugTerminal, "%x\n", map_entry->type);
 
-	//screen_print("%x | %x | %x\n\n",map_entry->baseAddress, map_entry->length, map_entry->type); //doesn't work to be fixed
+	//terminal_print(debugTerminal, "%x | %x | %x\n\n",map_entry->baseAddress, map_entry->length, map_entry->type); //doesn't work to be fixed
 }
 
 
@@ -149,9 +150,9 @@ void memory_init(bootinfo *boot_info)
 
 	alocate_kernel_executable(boot_info->kernel_base, boot_info->kernel_img_size);
 
-	//screen_print("\nFree blocks: %d", get_free_block_count());
+	//terminal_print(debugTerminal, "\nFree blocks: %d", get_free_block_count());
 
-	screen_print("Memory ready!\n");
+	terminal_print(debugTerminal, "Memory ready!\n");
 }
 
 void *memory_alloc_block()
@@ -186,11 +187,11 @@ void memory_free_block(void* p)
 
 void print_memory_map()
 {
-	screen_set_color(BACKGROUND_GREEN);
-	screen_print("Memory Map:\n");
-	screen_set_color(LIGH_GREEN);
-	screen_print("length: %x\nAddress: %x\n\nEntries:\n", memory_map.length, memory_map.map);
-	screen_print("Base | length | Type\n\n");
+	terminal_set_color(debugTerminal, BACKGROUND_GREEN);
+	terminal_print(debugTerminal, "Memory Map:\n");
+	terminal_set_color(debugTerminal, LIGH_GREEN);
+	terminal_print(debugTerminal, "length: %x\nAddress: %x\n\nEntries:\n", memory_map.length, memory_map.map);
+	terminal_print(debugTerminal, "Base | length | Type\n\n");
 
 	int c = memory_map.length/24;
 

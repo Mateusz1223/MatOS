@@ -1,8 +1,8 @@
 #include "inc/drivers/keyboard.h"
 
 #include "inc/HAL.h"
-#include "inc/drivers/screen.h"
 #include "inc/drivers/PIC.h"
+#include "inc/UI/UIManager.h"
 
 #define TASK_NONEOPERATION 0x0
 #define TASK_GETRESPONSE 0x1
@@ -20,8 +20,6 @@ typedef struct KeyboardAction
 	int id;
 	bool released; // false -> key pressed, true -> key released
 } KeyboardAction;
-
-char keyIdLookUpTable[];
 
 // __________________________________________________________________________
 
@@ -51,7 +49,9 @@ void keyboard_init()
 {
 	Keyboard.capsLockActive = 0;
 
-	screen_print("PS/2 Keyboard ready!\n");
+	enable_keyboard_irq();
+
+	terminal_print(debugTerminal, "PS/2 Keyboard ready!\n");
 }
 
 bool previous_E0 = false;
@@ -64,7 +64,7 @@ void keyboard_irq()
 
 	// debug
 	/*screen_set_color(RED);
-	screen_print("Keybord interrupt. Scancode: %x\n", ch);
+	terminal_print(debugTerminal, "Keybord interrupt. Scancode: %x\n", ch);
 	screen_set_color(LIGH_GREEN);*/
 
 	if(to_ignore > 0)
@@ -333,28 +333,7 @@ void keyboard_irq()
 	{
 		Keyboard.pressedKeys[action.id] = true;
 
-		// Debug
-
-		//int d = (int)keyIdLookUpTable[action.id];
-
-		//screen_print("%d\n", d);
-
-		if(keyIdLookUpTable[action.id] == 8)
-			screen_print("\nBACKSPACE\n");
-		else if(keyIdLookUpTable[action.id] == 127)
-			screen_print("\nDELETE\n");
-		else if(keyIdLookUpTable[action.id] == -1)
-			screen_print("\nUNDEFINED\n");
-		else if(keyIdLookUpTable[action.id] == -3)
-			screen_print("\nENTER\n");
-		else if(keyIdLookUpTable[action.id] == -4)
-			screen_print("\n<-\n");
-		else if(keyIdLookUpTable[action.id] == -5)
-			screen_print("\n->\n");
-		else
-			screen_putchar(keyIdLookUpTable[action.id]);
-
-		// Send char to current buffer
+		UI_manager_keyboard_irq_resident(action.id);
 	}
 	else
 	{

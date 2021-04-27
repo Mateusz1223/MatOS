@@ -35,13 +35,13 @@
 //blinking
 #define BLINKING 0x80
 
+void VGA_init(bootinfo* boot_info);
 
-void screen_init(bootinfo* boot_info);
+void VGA_get_display_size(int *x, int *y);
 
-void screen_clear();
-void screen_putchar( char ch );
-void screen_print( const char *str, ...);
-void screen_set_color( char ch );
+void VGA_copy_to_textram(int pos, void *src, int count); // will copy just to the end of textram ( pos -> number of staring charcter, src -> pinter to sorce, count -> number of characters to be copied
 
-void screen_disable_cursor();
-void screen_enable_cursor();
+void VGA_set_cursor_position(int x, int y);
+
+void VGA_disable_cursor();
+void VGA_enable_cursor();

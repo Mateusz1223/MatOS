@@ -2,7 +2,6 @@
 
 #include "inc/interrupts/int_asm_handlers.h"
 #include "inc/drivers/PIC.h"
-#include "inc/drivers/screen.h"
 
 struct IDTEntry
 {
@@ -85,6 +84,4 @@ void idt_init()
 		SETIDTDESCR(IDT[i+32], irq_handler);
 	
 	__asm("lidt [%0]" : : "r"(&ptr));
-
-	screen_print("Interrupts initialized!\n");
 }

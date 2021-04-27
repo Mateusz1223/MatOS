@@ -1,8 +1,9 @@
 #include "inc/interrupts/int_handler.h"
 
 #include "inc/drivers/PIC.h"
-#include "inc/drivers/screen.h"
+#include "inc/UI/terminal.h"
 #include "inc/drivers/keyboard.h"
+#include "inc/drivers/VGA.h"
 
 char *int_reasons[32] ={
 	"Divide Error",
@@ -39,24 +40,23 @@ char *int_reasons[32] ={
 	"Intel reserved. I have no idea how it happend!!!!",
 };
 
-void interrupt_handler(uint32_t int_num, TrapFrame *frame)
+void interrupt_handler(uint32_t int_num, TrapFrame *frame) // doesn't work for some reason!!
 {
-	screen_clear();
-	screen_set_color(0x4);
+	terminal_set_color(debugTerminal, RED);
 
-	screen_print("Interrupt number: %x\n", int_num);
-	screen_print("Interrupt reason: %s\n\n", int_reasons[int_num]);
+	terminal_print(debugTerminal, "Interrupt number: %x\n", int_num);
+	terminal_print(debugTerminal, "Interrupt reason: %s\n\n", int_reasons[int_num]);
 	
-	screen_print("TrapFrame:\n");
-	screen_print("EAX: %x\n",frame->EAX);
-	screen_print("EBX: %x\n",frame->EBX);
-	screen_print("ECX: %x\n",frame->ECX);
-	screen_print("EDX: %x\n",frame->EDX);
-	screen_print("EDI: %x\n",frame->EDI);
-	screen_print("ESI: %x\n",frame->ESI);
-	screen_print("EBP: %x\n\n",frame->EBP);
+	terminal_print(debugTerminal, "TrapFrame:\n");
+	terminal_print(debugTerminal, "EAX: %x\n",frame->EAX);
+	terminal_print(debugTerminal, "EBX: %x\n",frame->EBX);
+	terminal_print(debugTerminal, "ECX: %x\n",frame->ECX);
+	terminal_print(debugTerminal, "EDX: %x\n",frame->EDX);
+	terminal_print(debugTerminal, "EDI: %x\n",frame->EDI);
+	terminal_print(debugTerminal, "ESI: %x\n",frame->ESI);
+	terminal_print(debugTerminal, "EBP: %x\n\n",frame->EBP);
 
-	screen_print("System halted");
+	terminal_print(debugTerminal, "System halted");
 	
 	for(;;);
 }
