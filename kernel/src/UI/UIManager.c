@@ -21,14 +21,14 @@ static struct UIManagerStruct
 
 //_____________________________________________________________________________
 
-static void update_display()
+static void update_terminal_display(Terminal *term)
 {
 	VGA_copy_to_textram(UIManager.taskbarHeight*UIManager.width,
-						&UIManager.currentTerminal->buffer[UIManager.currentTerminal->displayY * UIManager.currentTerminal->width * 2],
-						UIManager.currentTerminal->height * UIManager.width);
+						&term->buffer[term->displayY * term->width * 2],
+						term->height * UIManager.width);
 
-	int x = UIManager.currentTerminal->cursorX;
-	int y = UIManager.currentTerminal->cursorY - UIManager.currentTerminal->displayY + UIManager.taskbarHeight;
+	int x = term->cursorX;
+	int y = term->cursorY - UIManager.currentTerminal->displayY + UIManager.taskbarHeight;
 	if(y >= UIManager.height || y < UIManager.taskbarHeight)
 	{
 		VGA_disable_cursor();
@@ -36,7 +36,7 @@ static void update_display()
 	else
 	{
 		VGA_enable_cursor();
-		VGA_set_cursor_position(x, y);
+		VGA_set_cursor(x, y, term->color);
 	}
 }
 
@@ -100,25 +100,38 @@ void UI_manager_init()
 	UIManager.taskBar[firstPosition+9] = BACKGROUND_CYAN;
 	UIManager.taskBar[firstPosition+11] = BACKGROUND_CYAN;
 
+	firstPosition = UIManager.width * 2 - 14;
+	UIManager.taskBar[firstPosition] = '-';
+	UIManager.taskBar[firstPosition+2] = '-';
+	UIManager.taskBar[firstPosition+4] = ':';
+	UIManager.taskBar[firstPosition+6] = '-';
+	UIManager.taskBar[firstPosition+8] = '-';
+
 	UIManager.taskbarUpdated = true;
 }
 
-void UI_manager_run()
+void UI_manager_request_emergency_display_update(Terminal *term)
 {
-	for(;;)
-	{
-		// Update time on task bar
-		//...
+	VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
+	update_terminal_display(term);
+}
 
-		// If taskbar was updated copy new taskbar to VGA textram
-		if(UIManager.taskbarUpdated)
-			VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
-		
-		if(UIManager.currentTerminal->displayUpdated)
-		{
-			update_display();
-			UIManager.currentTerminal->displayUpdated = false;
-		}
+void UI_manager_get_display_size(int *x, int *y)
+{
+	*x = UIManager.width;
+	*y = UIManager.height - UIManager.taskbarHeight;
+}
+
+void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
+{
+	// If taskbar was updated copy new taskbar to VGA textram
+	if(UIManager.taskbarUpdated)
+		VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
+	
+	if(UIManager.currentTerminal->displayUpdated)
+	{
+		update_terminal_display(UIManager.currentTerminal);
+		UIManager.currentTerminal->displayUpdated = false;
 	}
 }
 
@@ -194,8 +207,31 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 		terminal_putchar(debugTerminal, keyIdLookUpTable[keyId]);
 }
 
-void UI_manager_get_display_size(int *x, int *y)
+void UI_manager_RTC_irq_resident(int h, int m) // will be called by RTC_irq(), updates taskbar time
 {
-	*x = UIManager.width;
-	*y = UIManager.height - UIManager.taskbarHeight;
+
+
+	int firstPosition = UIManager.width * 2 - 14;
+
+	if(h < 10)
+	{
+		UIManager.taskBar[firstPosition] = '0';
+		UIManager.taskBar[firstPosition+2] = (char)(h + 48);
+	}
+	else
+	{
+		UIManager.taskBar[firstPosition] = (char)((h / 10) + 48);
+		UIManager.taskBar[firstPosition+2] = (char)((h % 10) + 48); // May be optimized using previous calculation h / 10
+	}
+
+	if(m < 10)
+	{
+		UIManager.taskBar[firstPosition+6] = '0';
+		UIManager.taskBar[firstPosition+8] = (char)(m + 48);
+	}
+	else
+	{
+		UIManager.taskBar[firstPosition+6] = (char)((m / 10) + 48);
+		UIManager.taskBar[firstPosition+8] = (char)((m % 10) + 48); // May be optimized using previous calculation h / 10
+	}
 }

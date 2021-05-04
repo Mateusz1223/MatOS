@@ -5,6 +5,8 @@
 #include "inc/interrupts/idt.h"
 #include "inc/drivers/memory_menager.h"
 #include "inc/UI/UIManager.h"
+#include "inc/drivers/timers/RTC.h"
+#include "inc/drivers/timers/PIT.h"
 
 #include "inc/drivers/busses/ATA.h"
 
@@ -16,8 +18,10 @@ void _start(bootinfo* boot_info)
 	idt_init();
 	memory_init(boot_info);
 	keyboard_init();
+	RTC_init();
+	PIT_init();
 
 	//ATA_check();
 
-	UI_manager_run();
+	for(;;);
 }

@@ -25,7 +25,7 @@ static void clear()
 		VGA.textram[i+1] = LIGH_GREEN;
 	}
 
-	VGA_set_cursor_position(0, 0);
+	VGA_set_cursor(0, 0, LIGH_GREEN);
 }
 
 //___________________________________________________________________________________________________
@@ -61,7 +61,7 @@ void VGA_copy_to_textram(int pos, void *src, int count) // ( pos -> number of st
 	memmove(dest, src, count*2); // count*2 because one character in textram consist of 2 bytes - character and color
 }
 
-void VGA_set_cursor_position(int x, int y)
+void VGA_set_cursor(int x, int y, unsigned char color)
 {
 	uint16_t pos = y * VGA.width + x;
 	
@@ -70,6 +70,8 @@ void VGA_set_cursor_position(int x, int y)
 	
 	outb(VGA.IO_Port_RegisterIndex, 0xe);
 	outb(VGA.IO_Port_DataRegister, (uint8_t)((pos >> 8) & 0xff));
+
+	VGA.textram[2*pos+1] = color;
 }
 
 void VGA_disable_cursor()

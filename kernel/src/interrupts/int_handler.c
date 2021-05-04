@@ -1,9 +1,8 @@
 #include "inc/interrupts/int_handler.h"
 
-#include "inc/drivers/PIC.h"
 #include "inc/UI/terminal.h"
-#include "inc/drivers/keyboard.h"
-#include "inc/drivers/VGA.h"
+#include "inc/UI/UIManager.h"
+#include "inc/drivers/VGA.h" // for colors
 
 char *int_reasons[32] ={
 	"Divide Error",
@@ -40,10 +39,11 @@ char *int_reasons[32] ={
 	"Intel reserved. I have no idea how it happend!!!!",
 };
 
-void interrupt_handler(uint32_t int_num, TrapFrame *frame) // doesn't work for some reason!!
+void interrupt_handler(uint32_t int_num, TrapFrame *frame)
 {
 	terminal_set_color(debugTerminal, RED);
 
+	terminal_print(debugTerminal, "\nMESSAGE OF DEATH!\n");
 	terminal_print(debugTerminal, "Interrupt number: %x\n", int_num);
 	terminal_print(debugTerminal, "Interrupt reason: %s\n\n", int_reasons[int_num]);
 	
@@ -57,26 +57,8 @@ void interrupt_handler(uint32_t int_num, TrapFrame *frame) // doesn't work for s
 	terminal_print(debugTerminal, "EBP: %x\n\n",frame->EBP);
 
 	terminal_print(debugTerminal, "System halted");
+
+	UI_manager_request_emergency_display_update(debugTerminal);
 	
 	for(;;);
-}
-
-void pic_handler()
-{
-	uint16_t isr = pic_get_isr();
-	uint8_t isr1 = isr >> 8;
-	uint8_t isr2 = isr << 8;
-	int irq_num;
-	
-	if(isr2 == 0)
-		irq_num = isr1 - 1;
-	else
-		irq_num = isr2 + 7;
-	
-	if(irq_num == 1)
-	{
-		keyboard_irq();
-	}
-	
-	PIC_sendEOI(irq_num);
 }

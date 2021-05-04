@@ -22,13 +22,11 @@ typedef struct Terminal
 
 Terminal *debugTerminal;
 
-void terminal_init( Terminal *term );
+void terminal_init( Terminal *this );
 
-void terminal_print( Terminal *term, const char *str, ... );
-void terminal_putchar( Terminal *term, char ch );
-void terminal_set_color( Terminal *term, char ch );
+void terminal_print( Terminal *this, const char *str, ... );
+void terminal_putchar( Terminal *this, char ch );
+void terminal_set_color( Terminal *this, char ch );
 
-void terminal_scan( Terminal *term, const char *str, ... );
-
-void terminal_scroll_up( Terminal *term );
-void terminal_scroll_down( Terminal *term );
+void terminal_scroll_up( Terminal *this );
+void terminal_scroll_down( Terminal *this );

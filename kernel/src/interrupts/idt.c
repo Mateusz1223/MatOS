@@ -1,7 +1,10 @@
 #include "inc/interrupts/idt.h"
 
+#include "inc/interrupts/interrupts.h"
 #include "inc/interrupts/int_asm_handlers.h"
 #include "inc/drivers/PIC.h"
+
+#include "inc/UI/terminal.h"
 
 struct IDTEntry
 {
@@ -65,6 +68,25 @@ void *int_handlers[32] = {
 	int_31_handler,
 };
 
+void *irq_handlers[16] = {
+	irq_0_handler,
+    irq_1_handler,
+    irq_2_handler,
+    irq_3_handler,
+    irq_4_handler,
+    irq_5_handler,
+    irq_6_handler,
+    irq_7_handler,
+    irq_8_handler,
+    irq_9_handler,
+    irq_10_handler,
+	irq_11_handler,
+	irq_12_handler,
+	irq_13_handler,
+	irq_14_handler, 
+	irq_15_handler,
+  };
+
 IDTEntry IDT[256];
 
 IDTR ptr = {
@@ -74,14 +96,17 @@ IDTR ptr = {
 
 void idt_init()
 {
-	PIC_remap(0x20, 0x28);
-	IRQ_set_mask(0);
-	
+	PIC_init();
+
 	for(int i=0; i<32; i++)
 		SETIDTDESCR(IDT[i], int_handlers[i]);
 	
 	for(int i=0; i<16; i++)
-		SETIDTDESCR(IDT[i+32], irq_handler);
+		SETIDTDESCR(IDT[i+32], irq_handlers[i]);
 	
-	__asm("lidt [%0]" : : "r"(&ptr));
+	__asm("lidt %0" : : "m"(ptr));
+
+	enable_interrupts();
+
+	terminal_print(debugTerminal, "IDT loaded!\n");
 }

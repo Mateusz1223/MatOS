@@ -32,7 +32,7 @@ void int_28_handler();
 void int_29_handler();
 void int_30_handler();
 void int_31_handler();
-/*
+
 void irq_0_handler();
 void irq_1_handler();
 void irq_2_handler();
@@ -48,6 +48,6 @@ void irq_11_handler();
 void irq_12_handler();
 void irq_13_handler();
 void irq_14_handler();
-void irq_15_handler();*/
+void irq_15_handler();
 
 void irq_handler();

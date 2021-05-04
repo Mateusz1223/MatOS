@@ -41,7 +41,7 @@ void VGA_get_display_size(int *x, int *y);
 
 void VGA_copy_to_textram(int pos, void *src, int count); // will copy just to the end of textram ( pos -> number of staring charcter, src -> pinter to sorce, count -> number of characters to be copied
 
-void VGA_set_cursor_position(int x, int y);
+void VGA_set_cursor(int x, int y, unsigned char color);
 
 void VGA_disable_cursor();
 void VGA_enable_cursor();

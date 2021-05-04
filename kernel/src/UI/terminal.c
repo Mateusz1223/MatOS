@@ -5,91 +5,91 @@
 
 //___________________________________________________________________________________________________
 
-static void check_last_character_y( Terminal *term)
+static void check_last_character_y( Terminal *this)
 {
-	if(term->lastCharacterY >= term->displayY+term->height)
-		terminal_scroll_down(term);
+	if(this->lastCharacterY >= this->displayY+this->height)
+		terminal_scroll_down(this);
 
-	if(term->lastCharacterY >= term->buffSize / term->width - 1)
+	if(this->lastCharacterY >= this->buffSize / this->width - 1)
 	{
-		memmove(term->buffer, &term->buffer[term->buffSize], (size_t)term->buffSize); // term->buffSize / 2 * 2, will always be even number, so won't cause problems
+		memmove(this->buffer, &this->buffer[this->buffSize], (size_t)this->buffSize); // this->buffSize / 2 * 2, will always be even number, so won't cause problems
 
-		for(int i=term->buffSize; i<term->buffSize*2; i+=2)
+		for(int i=this->buffSize; i<this->buffSize*2; i+=2)
 		{
-			term->buffer[i] = ' ';
-			term->buffer[i+1] = term->color;
+			this->buffer[i] = ' ';
+			this->buffer[i+1] = this->color;
 		}	
 
-		term->cursorY -= term->buffSize / term->width / 2;
+		this->cursorY -= this->buffSize / this->width / 2;
 
-		term->displayY -= term->buffSize / term->width / 2;
-		term->displayY++;
-		term->lastCharacterY -= term->buffSize / term->width / 2;
+		this->displayY -= this->buffSize / this->width / 2;
+		this->displayY++;
+		this->lastCharacterY -= this->buffSize / this->width / 2;
 
-		term->displayUpdated = true;
+		this->displayUpdated = true;
 	}
 }
 
-static void next_line( Terminal *term)
+static void next_line( Terminal *this)
 {
-	term->cursorY++;
-	term->cursorX = 0;
+	this->cursorY++;
+	this->cursorX = 0;
 
-	term->lastCharacterY = term->cursorY;
-	check_last_character_y(term);
+	this->lastCharacterY = this->cursorY;
+	check_last_character_y(this);
 }
 
-static void put_character( Terminal *term, char ch)
+static void put_character( Terminal *this, char ch)
 {
 	switch(ch)
 		{
 			case '\n':
 			{
-				next_line(term);
+				next_line(this);
 				break;
 			}
 			
 			case '\r':
 			{
-				next_line(term);
+				next_line(this);
 				break;
 			}
 		
 			case '\t':
 			{
 				for(int i=0; i<4; i++)
-					put_character(term, ' ');
+					put_character(this, ' ');
 				break;
 			}
 			
 			default:
 			{
-				int pos = (term->cursorY * term->width + term->cursorX)*2;
+				int pos = (this->cursorY * this->width + this->cursorX)*2;
 				
-				term->buffer[pos] = ch;
-				term->buffer[pos+1] = term->color;
+				this->buffer[pos] = ch;
+				this->buffer[pos+1] = this->color;
 
-				term->cursorX++;
-				if(term->cursorX >= term->width)
-					next_line(term);
+				this->cursorX++;
+				if(this->cursorX >= this->width)
+					next_line(this);
 			}
 		}
 }
 
-static void put_text( Terminal *term, char *str )
+static void put_text( Terminal *this, char *str )
 {
 	while(*str != '\0')
 	{
-		put_character(term, *str);
+		put_character(this, *str);
 		++str;
 	}
 }
 
-static void print_uint( Terminal *term, unsigned int d )
+static void print_uint( Terminal *this, unsigned int d )
 {
 	if(d==0)
 	{
-		put_character(term, '0');
+		put_character(this, '0');
 		return;
 	}
 	
@@ -102,27 +102,27 @@ static void print_uint( Terminal *term, unsigned int d )
 		*p = (d % 10) + '0';
 		d /= 10;
 	}
-	put_text(term, p);
+	put_text(this, p);
 }
 
-static void print_int( Terminal *term, int d )
+static void print_int( Terminal *this, int d )
 {	
 	if(d<0)
 	{
 		d=-d;
-		put_character(term, '-');
+		put_character(this, '-');
 	}
 	
-	print_uint(term, (unsigned int) d);
+	print_uint(this, (unsigned int) d);
 }
 
-static void print_hex( Terminal *term, unsigned int d ) //Seem to be fine but used to crush system
+static void print_hex( Terminal *this, unsigned int d ) //Seem to be fine but used to crush system
 {
-	put_text(term, "0x");
+	put_text(this, "0x");
 	
 	if(d==0)
 	{
-		put_character(term, '0');
+		put_character(this, '0');
 		return;
 	}
 	
@@ -136,7 +136,7 @@ static void print_hex( Terminal *term, unsigned int d ) //Seem to be fine but us
 	
 	while(i!=8)
 	{
-		put_character(term,  "0123456789abcdef"[d>>28]);
+		put_character(this,  "0123456789abcdef"[d>>28]);
 		d<<=4;
 		++i;
 	}
@@ -144,31 +144,31 @@ static void print_hex( Terminal *term, unsigned int d ) //Seem to be fine but us
 
 //___________________________________________________________________________________________________
 
-void terminal_init( Terminal *term )
+void terminal_init( Terminal *this )
 {
-	term->buffSize = 4000; // in the future buffer will be dynamically allocated (it will be buffer size in bytes divided by 2)
+	this->buffSize = 4000; // in the future buffer will be dynamically allocated (it will be buffer size in bytes divided by 2)
 
-	UI_manager_get_display_size(&term->width, &term->height);
-	term->cursorX = 0;
-	term->cursorY = 0;
-	term->cursorEnabled = true;
-	term->color = LIGH_GREEN;
+	UI_manager_get_display_size(&this->width, &this->height);
+	this->cursorX = 0;
+	this->cursorY = 0;
+	this->cursorEnabled = true;
+	this->color = LIGH_GREEN;
 
 	// clear buffer
-	for(int i=0; i<term->buffSize*2; i+=2)
+	for(int i=0; i<this->buffSize*2; i+=2)
 	{
-		term->buffer[i] = ' ';
-		term->buffer[i+1] = term->color;
+		this->buffer[i] = ' ';
+		this->buffer[i+1] = this->color;
 	}
 
-	term->displayY = 0;
-	term->lastCharacterY = 0;
+	this->displayY = 0;
+	this->lastCharacterY = 0;
 
-	terminal_print(term, "MATOS https://github.com/Mateusz1223/MatOS\nMateusz Piasecki https://piaseckimateusz.pl/\n\nWelcome to Terminal !!\n\n");
-	term->displayUpdated = true;
+	terminal_print(this, "MATOS https://github.com/Mateusz1223/MatOS\nMateusz Piasecki https://piaseckimateusz.pl/\n\nWelcome to Terminal !!\n\n");
+	this->displayUpdated = true;
 }
 
-void terminal_print( Terminal *term, const char *str, ... ) // May not work properly. May mix order
+void terminal_print( Terminal *this, const char *str, ... ) // May not work properly. May mix order
 {
 	va_list args;
 	va_start(args, str); // ????
@@ -182,69 +182,69 @@ void terminal_print( Terminal *term, const char *str, ... ) // May not work prop
 			{
 				case 'i':
 				case 'd':
-					print_int(term, va_arg(args, int));
+					print_int(this, va_arg(args, int));
 					break;
 				case 'x':
-					print_hex(term, va_arg(args, int));
+					print_hex(this, va_arg(args, int));
 					break;
 				case 'u':
-					print_uint(term, va_arg(args, unsigned int));
+					print_uint(this, va_arg(args, unsigned int));
 					break;
 				case 's':
-					put_text(term, va_arg(args, char*));
+					put_text(this, va_arg(args, char*));
 					break;
 				case '%':
-					put_character(term, '%');
+					put_character(this, '%');
 					break;
 				default:
-					put_character(term, *str);
+					put_character(this, *str);
 					break;
 			}
-		}else put_character(term, *str);
+		}else put_character(this, *str);
 		
 		++str;
 	}
 	
 	va_end(args);
 
-	term->displayUpdated = true;
+	this->displayUpdated = true;
 }
 
-void terminal_putchar( Terminal *term, char ch )
+void terminal_putchar( Terminal *this, char ch )
 {
 	char str[2];
 	str[0] = ch;
 	str[1] = 0;
-	terminal_print(term, str);
+	terminal_print(this, str);
 }
 
-void terminal_set_color( Terminal *term, char ch )
+void terminal_set_color( Terminal *this, char ch )
 {
-	term->color = ch;
+	this->color = ch;
 
-	int pos = (term->cursorY * term->width + term->cursorX)*2 + 1;
-	term->buffer[pos] = ch;
+	int pos = (this->cursorY * this->width + this->cursorX)*2 + 1;
+	this->buffer[pos] = ch;
 }
 
-void terminal_scan( Terminal *term, const char *str, ... )
+void terminal_scan( Terminal *this, const char *str, ... )
 {
 	// TODO
 }
 
-void terminal_scroll_up( Terminal *term )
+void terminal_scroll_up( Terminal *this )
 {
-	term->displayY--;
-	if(term->displayY < 0)
-		term->displayY = 0;
+	this->displayY--;
+	if(this->displayY < 0)
+		this->displayY = 0;
 
-	term->displayUpdated = true;
+	this->displayUpdated = true;
 }
 
-void terminal_scroll_down(Terminal *term)
+void terminal_scroll_down(Terminal *this)
 {
-	term->displayY++;
-	if(term->displayY + term->height >= term->buffSize / term->width)
-		term->displayY--;
+	this->displayY++;
+	if(this->displayY + this->height >= this->buffSize / this->width)
+		this->displayY--;
 
-	term->displayUpdated = true;
+	this->displayUpdated = true;
 }

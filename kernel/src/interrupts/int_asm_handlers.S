@@ -33,7 +33,7 @@
 .globl _int_30_handler
 .globl _int_31_handler
 
-/*.globl _irq_0_handler
+.globl _irq_0_handler
 .globl _irq_1_handler
 .globl _irq_2_handler
 .globl _irq_3_handler
@@ -48,7 +48,7 @@
 .globl _irq_12_handler
 .globl _irq_13_handler
 .globl _irq_14_handler
-.globl _irq_15_handler*/
+.globl _irq_15_handler
 
 .globl _irq_handler
 
@@ -86,7 +86,7 @@
 .def _int_30_handler ; .scl 2 ; .type 32 ; .endef
 .def _int_31_handler ; .scl 2 ; .type 32 ; .endef
 
-/*.def _irq_0_handler ; .scl 2 ; .type 32 ; .endef
+.def _irq_0_handler ; .scl 2 ; .type 32 ; .endef
 .def _irq_1_handler ; .scl 2 ; .type 32 ; .endef
 .def _irq_2_handler ; .scl 2 ; .type 32 ; .endef
 .def _irq_3_handler ; .scl 2 ; .type 32 ; .endef
@@ -101,7 +101,7 @@
 .def _irq_12_handler ; .scl 2 ; .type 32 ; .endef
 .def _irq_13_handler ; .scl 2 ; .type 32 ; .endef
 .def _irq_14_handler ; .scl 2 ; .type 32 ; .endef
-.def _irq_15_handler ; .scl 2 ; .type 32 ; .endef*/
+.def _irq_15_handler ; .scl 2 ; .type 32 ; .endef
 
 .def _irq_handler ; .scl 2 ; .type 32 ; .endef
 
@@ -111,6 +111,7 @@ _int_0_handler:
   push esp
   push 0
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -121,6 +122,7 @@ _int_0_handler:
   push esp
   push 1
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -131,6 +133,7 @@ _int_0_handler:
   push esp
   push 2
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -141,6 +144,7 @@ _int_0_handler:
   push esp
   push 3
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -151,6 +155,7 @@ _int_0_handler:
   push esp
   push 4
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -161,6 +166,7 @@ _int_0_handler:
   push esp
   push 5
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -171,6 +177,7 @@ _int_0_handler:
   push esp
   push 6
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -181,6 +188,7 @@ _int_0_handler:
   push esp
   push 7
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -191,6 +199,7 @@ _int_0_handler:
   push esp
   push 8
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -201,6 +210,7 @@ _int_0_handler:
   push esp
   push 9
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -211,6 +221,7 @@ _int_0_handler:
   push esp
   push 10
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -221,6 +232,7 @@ _int_0_handler:
   push esp
   push 11
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -231,6 +243,7 @@ _int_0_handler:
   push esp
   push 12
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -241,6 +254,7 @@ _int_0_handler:
   push esp
   push 13
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -251,6 +265,7 @@ _int_0_handler:
   push esp
   push 14
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -261,6 +276,7 @@ _int_0_handler:
   push esp
   push 15
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -271,6 +287,7 @@ _int_0_handler:
   push esp
   push 16
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -281,6 +298,7 @@ _int_0_handler:
   push esp
   push 17
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -291,6 +309,7 @@ _int_0_handler:
   push esp
   push 18
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -301,6 +320,7 @@ _int_0_handler:
   push esp
   push 19
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -311,6 +331,7 @@ _int_0_handler:
   push esp
   push 20
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -321,6 +342,7 @@ _int_0_handler:
   push esp
   push 21
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -331,6 +353,7 @@ _int_0_handler:
   push esp
   push 22
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -341,6 +364,7 @@ _int_0_handler:
   push esp
   push 23
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -351,6 +375,7 @@ _int_0_handler:
   push esp
   push 24
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -361,6 +386,7 @@ _int_0_handler:
   push esp
   push 25
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -371,6 +397,7 @@ _int_0_handler:
   push esp
   push 26
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -381,6 +408,7 @@ _int_0_handler:
   push esp
   push 27
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -391,6 +419,7 @@ _int_0_handler:
   push esp
   push 28
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -401,6 +430,7 @@ _int_0_handler:
   push esp
   push 29
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -411,6 +441,7 @@ _int_0_handler:
   push esp
   push 30
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
@@ -421,14 +452,179 @@ _int_0_handler:
   push esp
   push 31
   call _interrupt_handler
+  pop eax
   popad
   sti
   iret
+
+  /*____________________________________________________________________*/
+
+  _irq_0_handler:
+  cli
+  pushad
+  push 0
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_1_handler:
+  cli
+  pushad
+  push 1
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_2_handler:
+  cli
+  pushad
+  push 2
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_3_handler:
+  cli
+  pushad
+  push 3
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_4_handler:
+  cli
+  pushad
+  push 4
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_5_handler:
+  cli
+  pushad
+  push 5
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_6_handler:
+  cli
+  pushad
+  push 6
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_7_handler:
+  cli
+  pushad
+  push 7
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_8_handler:
+  cli
+  pushad
+  push 8
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_9_handler:
+  cli
+  pushad
+  push 9
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_10_handler:
+  cli
+  pushad
+  push 10
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_11_handler:
+  cli
+  pushad
+  push 11
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_12_handler:
+  cli
+  pushad
+  push 12
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_13_handler:
+  cli
+  pushad
+  push 13
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_14_handler:
+  cli
+  pushad
+  push 14
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  _irq_15_handler:
+  cli
+  pushad
+  push 15
+  call _PIC_handler
+  pop eax
+  popad
+  sti
+  iret
+
+  /*____________________________________________________________________*/
   
   _irq_handler:
   cli
   pushad
-  call _pic_handler
+  call _PIC_handler
   popad
   sti
   iret
