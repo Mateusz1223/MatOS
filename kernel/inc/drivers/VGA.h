@@ -15,10 +15,10 @@
 #define WHITE 0x7
 #define GRAY 0x8
 #define LIGHT_BLUE 0x9
-#define LIGH_GREEN 0xa
-#define LIGH_CYAN 0xb
-#define LIGH_RED 0xc
-#define LIGH_MAGNETA 0xd
+#define LIGHT_GREEN 0xa
+#define LIGHT_CYAN 0xb
+#define LIGHT_RED 0xc
+#define LIGHT_MAGNETA 0xd
 #define YELLOW 0xe
 #define BRIGHT_WHITE 0xf
 

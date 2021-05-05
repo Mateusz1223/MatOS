@@ -22,10 +22,10 @@ static void clear()
 	for(i=0; i<n; i+=2)
 	{
 		VGA.textram[i] = ' ';
-		VGA.textram[i+1] = LIGH_GREEN;
+		VGA.textram[i+1] = LIGHT_GREEN;
 	}
 
-	VGA_set_cursor(0, 0, LIGH_GREEN);
+	VGA_set_cursor(0, 0, LIGHT_GREEN);
 }
 
 //___________________________________________________________________________________________________

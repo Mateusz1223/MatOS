@@ -11,9 +11,9 @@
 
 static struct PITStruct
 {
-	unsigned long millisSinceInit;
+	unsigned long long millisSinceInit;
 
-	unsigned long UIResidentLastCall;
+	unsigned long long UIResidentLastCall;
 
 }PIT;
 
@@ -29,11 +29,6 @@ static void set_divisor(uint16_t div)
 	outb(0x40,(uint8_t)((div & 0xFF00) >> 8));	// High byte
 
 	enable_interrupts();
-}
-
-static void tick()
-{
-	PIT.millisSinceInit += 2; // frequency = 500
 }
 
 static void disable_PIC_irq()
@@ -60,14 +55,15 @@ void PIT_init()
 	terminal_print(debugTerminal, "PIT ready!\n");
 }
 
-unsigned long PIT_millis()
+unsigned long long PIT_millis()
 {
 	return PIT.millisSinceInit;
 }
 
 void PIT_irq()
 {
-	tick();
+	// Tick
+	PIT.millisSinceInit += 2; // frequency = 500
 
 	if(PIT.millisSinceInit - PIT.UIResidentLastCall > 40) // 25 fps
 	{

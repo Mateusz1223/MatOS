@@ -57,7 +57,7 @@ void UI_manager_init()
 
 	terminal_set_color(UIManager.currentTerminal, RED | BLINKING);
 	terminal_print(UIManager.currentTerminal, "This terminal is currently a debug terminal\n\n");
-	terminal_set_color(UIManager.currentTerminal, LIGH_GREEN);
+	terminal_set_color(UIManager.currentTerminal, LIGHT_GREEN);
 
 	// task bar
 	int n = 2*UIManager.taskbarHeight*UIManager.width;

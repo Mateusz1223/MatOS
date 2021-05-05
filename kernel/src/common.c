@@ -16,12 +16,12 @@ void *memmove (void *dest, const void *src, size_t size)
 	return dest;
 }
 
-void *memset(void *dest, int c, size_t n)
+void *memsetk(void *dest, uint8_t c, size_t n)
 {
-	uint8_t *int_dest = (uint8_t*)dest;
+	uint8_t *dest_byte = (uint8_t*)dest;
 	for(size_t i=0; i<n; i++)
 	{
-		int_dest[i] = (uint8_t)c;
+		dest_byte[i] = c;
 	}
 	return dest;
 }

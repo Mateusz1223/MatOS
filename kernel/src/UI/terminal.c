@@ -142,6 +142,14 @@ static void print_hex( Terminal *this, unsigned int d ) //Seem to be fine but us
 	}
 }
 
+static void print_bool( Terminal *this, bool b )
+{
+	if(b)
+		put_text(this, "true");
+	else
+		put_text(this, "false");
+}
+
 //___________________________________________________________________________________________________
 
 void terminal_init( Terminal *this )
@@ -152,7 +160,7 @@ void terminal_init( Terminal *this )
 	this->cursorX = 0;
 	this->cursorY = 0;
 	this->cursorEnabled = true;
-	this->color = LIGH_GREEN;
+	this->color = LIGHT_GREEN;
 
 	// clear buffer
 	for(int i=0; i<this->buffSize*2; i+=2)
@@ -192,6 +200,9 @@ void terminal_print( Terminal *this, const char *str, ... ) // May not work prop
 					break;
 				case 's':
 					put_text(this, va_arg(args, char*));
+					break;
+				case 'b':
+					print_bool(this, (bool)va_arg(args, int)); // variables are converted to int when too small in va
 					break;
 				case '%':
 					put_character(this, '%');

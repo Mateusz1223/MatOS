@@ -18,7 +18,7 @@
 
 Keyboard_buffer Nullbuffer; */
 
-char keyIdLookUpTable[];
+char keyIdLookUpTable[76];
 
 void keyboard_init(); // to do
 

@@ -3,12 +3,12 @@
 #include "inc/drivers/VGA.h"
 #include "inc/drivers/keyboard.h"
 #include "inc/interrupts/idt.h"
-#include "inc/drivers/memory_menager.h"
-#include "inc/UI/UIManager.h"
+#include "inc/memory/memory_menager.h"
 #include "inc/drivers/timers/RTC.h"
 #include "inc/drivers/timers/PIT.h"
 
-#include "inc/drivers/busses/ATA.h"
+#include "inc/UI/UIManager.h"
+#include "inc/UI/terminal.h"
 
 void _start(bootinfo* boot_info)
 {
@@ -20,8 +20,6 @@ void _start(bootinfo* boot_info)
 	keyboard_init();
 	RTC_init();
 	PIT_init();
-
-	//ATA_check();
 
 	for(;;);
 }

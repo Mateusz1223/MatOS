@@ -65,7 +65,7 @@ void keyboard_irq()
 	// debug
 	/*screen_set_color(RED);
 	terminal_print(debugTerminal, "Keybord interrupt. Scancode: %x\n", ch);
-	screen_set_color(LIGH_GREEN);*/
+	screen_set_color(LIGHT_GREEN);*/
 
 	if(to_ignore > 0)
 	{

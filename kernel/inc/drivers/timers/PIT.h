@@ -4,6 +4,6 @@
 
 void PIT_init();
 
-unsigned long PIT_millis();
+unsigned long long PIT_millis();
 
 void PIT_irq();
