@@ -9,9 +9,9 @@ ________________
 0x?????? (info in memory map)
 	Reserved
 0x100000
-	Allocation Memory Map (1 MiB)
-0x200000
-	Heap (2 MiB)
+	Allocation Memory Map (1/8 MiB)
+0x120000
+	Heap (2 7/8 MiB)
 0x400000
 	Kernel
 0x4????? (info in boot_info structure)

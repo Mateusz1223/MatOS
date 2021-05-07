@@ -13,8 +13,10 @@ static struct UIManagerStruct
 	int taskbarHeight;
 	bool taskbarUpdated;
 
+	int terminalCount;
 	Terminal terminals[TERMINAL_NUM];
 	Terminal *currentTerminal;
+	char termInputBuffers[TERMINAL_NUM][500];
 	int width;
 	int height;
 }UIManager;
@@ -46,18 +48,20 @@ void UI_manager_init()
 {
 	VGA_get_display_size(&UIManager.width, &UIManager.height); // Must be first
 
+	UIManager.terminalCount = TERMINAL_NUM;
+
 	UIManager.taskbarHeight = 2;
 
 	debugTerminal = &UIManager.terminals[0]; // debug terminal is in terminal.h
+	terminal_init(debugTerminal, true);
 
-	for(int i=0; i<TERMINAL_NUM; i++)
-		terminal_init(&UIManager.terminals[i]);
+	for(int i=1; i<UIManager.terminalCount; i++)
+	{
+		terminal_init(&UIManager.terminals[i], false);
+		UIManager.termInputBuffers[i][0] = 0;
+	}
 
 	UIManager.currentTerminal = &UIManager.terminals[0];
-
-	terminal_set_color(UIManager.currentTerminal, RED | BLINKING);
-	terminal_print(UIManager.currentTerminal, "This terminal is currently a debug terminal\n\n");
-	terminal_set_color(UIManager.currentTerminal, LIGHT_GREEN);
 
 	// task bar
 	int n = 2*UIManager.taskbarHeight*UIManager.width;
@@ -110,10 +114,21 @@ void UI_manager_init()
 	UIManager.taskbarUpdated = true;
 }
 
-void UI_manager_request_emergency_display_update(Terminal *term)
+void UI_manager_request_emergency_debug_terminal_display_update()
 {
+	UIManager.taskBar[2] = 'F';
+	UIManager.taskBar[3] = GREEN;
+	UIManager.taskBar[4] = '1';
+	UIManager.taskBar[5] = GREEN;
+	UIManager.taskBar[6] = '|';
+	UIManager.taskBar[8] = 'F';
+	UIManager.taskBar[9] = BACKGROUND_GREEN;
+	UIManager.taskBar[10] = '2';
+	UIManager.taskBar[11] = BACKGROUND_GREEN;
+	UIManager.taskBar[12] = '|';
+
 	VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
-	update_terminal_display(term);
+	update_terminal_display(debugTerminal);
 }
 
 void UI_manager_get_display_size(int *x, int *y)
@@ -124,6 +139,30 @@ void UI_manager_get_display_size(int *x, int *y)
 
 void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 {
+	for(int i=1; i<UIManager.terminalCount; i++)
+	{
+		if(&UIManager.terminals[i] == debugTerminal) // debug terminal dont interract with user, just prints debug info
+			continue;
+			
+		if(UIManager.terminals[i].processInProgress)
+			continue;
+
+		if(UIManager.terminals[i].scanInProgress == false)
+		{
+			if(strcmp(UIManager.termInputBuffers[i], "help"))
+			{
+				terminal_print(&UIManager.terminals[i], " Type:\n\thelp -> to see help message\n\tno more features yet\n\n");
+			}
+			else
+			{
+				terminal_print(&UIManager.terminals[i], "%s\n", UIManager.termInputBuffers[i]);
+			}
+
+			terminal_print(&UIManager.terminals[i], "> ");
+			terminal_scan(&UIManager.terminals[i], UIManager.termInputBuffers[i], 500);
+		}
+	}
+
 	// If taskbar was updated copy new taskbar to VGA textram
 	if(UIManager.taskbarUpdated)
 		VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
@@ -144,6 +183,14 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 	else if(keyId == 74) // CURSOR DOWN
 	{
 		terminal_scroll_down(UIManager.currentTerminal);
+	}
+	else if(keyId == 72) // CURSOR LEFT
+	{
+		terminal_move_cursor_left(UIManager.currentTerminal);
+	}
+	else if(keyId == 75) // CURSOR RIGHT
+	{
+		terminal_move_cursor_right(UIManager.currentTerminal);
 	}
 	else if(keyId == 2) // F1
 	{
@@ -184,27 +231,56 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 
 	// Debug
 
-	if(keyIdLookUpTable[keyId] == 8);
-		//terminal_print(debugTerminal, "\nBACKSPACE\n");
-	else if(keyIdLookUpTable[keyId] == 127);
-		//terminal_print(debugTerminal, "\nDELETE\n");
-	else if(keyIdLookUpTable[keyId] == -1);
-		//terminal_print(debugTerminal, "\nUNDEFINED\n");
-	else if(keyIdLookUpTable[keyId] == -3)
+	if(keyIdLookUpTable[keyId] == 8)
 	{
-		//terminal_print(debugTerminal, "\nENTER\n");
-		
+		//terminal_print(debugTerminal, "\nBACKSPACE\n");
+		terminal_backspace_in_scan_buffer(UIManager.currentTerminal);
+	}
+	else if(keyIdLookUpTable[keyId] == 127)
+	{
+		//terminal_print(debugTerminal, "\nDELETE\n");
+		terminal_delete_in_scan_buffer(UIManager.currentTerminal);
+	}
+	else if(keyIdLookUpTable[keyId] == -1)
+	{
+		//terminal_print(debugTerminal, "\nUNDEFINED\n");
+	}
+	else if(keyIdLookUpTable[keyId] == -3)
+	{	
 		terminal_print(debugTerminal, "\n");
+		terminal_end_scan(UIManager.currentTerminal);
 	}
 	else if(keyIdLookUpTable[keyId] == -4)
 	{
 		;
 		//terminal_print(debugTerminal, "\n<-\n");
 	}
-	else if(keyIdLookUpTable[keyId] == -5);
+	else if(keyIdLookUpTable[keyId] == -5)
+	{
 		//terminal_print(debugTerminal, "\n->\n");
+	}
 	else
+	{
+		bool upperCase = false;
+		if(keyboard_is_key_pressed(56) || keyboard_is_key_pressed(67)) // if SHIFT is pressed
+			upperCase = true;
+
+		if(keyboard_is_caps_lock())
+		{
+			if(upperCase == true)
+				upperCase = false;
+			else
+				upperCase = true;
+		}
+		
+		char ch = keyIdLookUpTable[keyId];
+
+		if(97 <= (int)ch && (int)ch <= 122 && upperCase)
+			ch -= 32;
+
 		terminal_putchar(debugTerminal, keyIdLookUpTable[keyId]);
+		terminal_add_char_to_scan_buffer(UIManager.currentTerminal, ch);
+	}
 }
 
 void UI_manager_RTC_irq_resident(int h, int m) // will be called by RTC_irq(), updates taskbar time

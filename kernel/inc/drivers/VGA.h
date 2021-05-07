@@ -35,7 +35,7 @@
 //blinking
 #define BLINKING 0x80
 
-void VGA_init(bootinfo* boot_info);
+void VGA_init(bootinfo* bootInfo);
 
 void VGA_get_display_size(int *x, int *y);
 

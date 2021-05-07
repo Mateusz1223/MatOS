@@ -8,6 +8,8 @@
 
 #include "inc/UI/terminal.h"
 
+#include "inc/interrupts/interrupts.h"
+
 //https://wiki.osdev.org/8259_PIC
 
 #define PIC1_COMMAND	0x20
@@ -128,6 +130,7 @@ uint16_t pic_get_isr(void)
 
 void PIC_handler(int irq_num)
 {
+	disable_interrupts();
 	//terminal_print(debugTerminal, "IRQ num: %d\n", irq_num);
 
 	switch( irq_num )
@@ -169,5 +172,6 @@ void PIC_handler(int irq_num)
 	15	Secondary ATA Hard Disk
 	*/
 	
+	enable_interrupts();
 	PIC_sendEOI(irq_num);
 }

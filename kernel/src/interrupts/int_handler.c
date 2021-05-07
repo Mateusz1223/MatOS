@@ -4,6 +4,8 @@
 #include "inc/UI/UIManager.h"
 #include "inc/drivers/VGA.h" // for colors
 
+#include "inc/interrupts/interrupts.h"
+
 char *int_reasons[32] ={
 	"Divide Error",
 	"Debug Exception",
@@ -41,6 +43,8 @@ char *int_reasons[32] ={
 
 void interrupt_handler(uint32_t int_num, TrapFrame *frame)
 {
+	disable_interrupts();
+
 	terminal_set_color(debugTerminal, RED);
 
 	terminal_print(debugTerminal, "\nMESSAGE OF DEATH!\n");
@@ -58,7 +62,7 @@ void interrupt_handler(uint32_t int_num, TrapFrame *frame)
 
 	terminal_print(debugTerminal, "System halted");
 
-	UI_manager_request_emergency_display_update(debugTerminal);
+	UI_manager_request_emergency_debug_terminal_display_update();
 	
 	for(;;);
 }

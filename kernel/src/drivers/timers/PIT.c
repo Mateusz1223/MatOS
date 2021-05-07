@@ -48,7 +48,7 @@ void PIT_init()
 	PIT.millisSinceInit = 0;
 	PIT.UIResidentLastCall = 0;
 
-	set_divisor(2386); // frequency = 500
+	set_divisor(1193 * 5); // frequency = 100
 
 	enable_PIC_irq();
 
@@ -63,7 +63,7 @@ unsigned long long PIT_millis()
 void PIT_irq()
 {
 	// Tick
-	PIT.millisSinceInit += 2; // frequency = 500
+	PIT.millisSinceInit += 5; // frequency = 500
 
 	if(PIT.millisSinceInit - PIT.UIResidentLastCall > 40) // 25 fps
 	{

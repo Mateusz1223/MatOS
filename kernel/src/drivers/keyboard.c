@@ -13,6 +13,10 @@ static struct KeyboardState
 	bool pressedKeys[76]; // 1->75, 0 is undefined key, [id]
 
 	bool capsLockActive;
+
+	int to_ignore;
+
+	bool previous_E0;
 } Keyboard;
 
 typedef struct KeyboardAction
@@ -49,14 +53,27 @@ void keyboard_init()
 {
 	Keyboard.capsLockActive = 0;
 
+	Keyboard.to_ignore = 0;
+	Keyboard.previous_E0 = false;
+
 	enable_keyboard_irq();
 
 	terminal_print(debugTerminal, "PS/2 Keyboard ready!\n");
 }
 
-bool previous_E0 = false;
 
-int to_ignore = 0;
+bool keyboard_is_key_pressed(int id)
+{
+	if(id < 0 || id >= 76)
+		return false;
+	
+	return Keyboard.pressedKeys[id];
+}
+
+bool keyboard_is_caps_lock()
+{
+	return Keyboard.capsLockActive;
+}
 
 void keyboard_irq()
 {
@@ -67,21 +84,21 @@ void keyboard_irq()
 	terminal_print(debugTerminal, "Keybord interrupt. Scancode: %x\n", ch);
 	screen_set_color(LIGHT_GREEN);*/
 
-	if(to_ignore > 0)
+	if(Keyboard.to_ignore > 0)
 	{
-		to_ignore--;
+		Keyboard.to_ignore--;
 		return;
 	}
 
 	if(ch == 0xE1)
 	{
-		to_ignore = 2;
+		Keyboard.to_ignore = 2;
 		return;
 	}
 	
 	if(ch == 0xE0)
 	{
-		previous_E0 = true;
+		Keyboard.previous_E0 = true;
 		return;
 	}
 
@@ -90,9 +107,9 @@ void keyboard_irq()
 	action.id = 0; // undefined key
 	action.released = true;
 
-	if(previous_E0)
+	if(Keyboard.previous_E0)
 	{
-		previous_E0 = false;
+		Keyboard.previous_E0 = false;
 		switch(ch)
 	    {
 	    // Pressed

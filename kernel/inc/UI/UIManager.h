@@ -9,7 +9,7 @@ void UI_manager_init();
 void UI_manager_get_display_size(int *x, int *y);
 
 // Used for unexpected interrupts such as division by 0, to print "message of death"
-void UI_manager_request_emergency_display_update(Terminal *term);
+void UI_manager_request_emergency_debug_terminal_display_update();
 
 // Residents
 

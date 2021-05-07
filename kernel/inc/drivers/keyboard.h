@@ -20,8 +20,10 @@ Keyboard_buffer Nullbuffer; */
 
 char keyIdLookUpTable[76];
 
-void keyboard_init(); // to do
+void keyboard_init();
 
-void keyboard_irq(); // to do
+bool keyboard_is_key_pressed(int id); 
 
-bool keyboard_is_key_pressed(int id); // to do
+bool keyboard_is_caps_lock();
+
+void keyboard_irq();

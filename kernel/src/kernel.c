@@ -10,13 +10,13 @@
 #include "inc/UI/UIManager.h"
 #include "inc/UI/terminal.h"
 
-void _start(bootinfo* boot_info)
+void _start(bootinfo* bootInfo)
 {
-	VGA_init(boot_info);
+	VGA_init(bootInfo);
 	UI_manager_init();
 
 	idt_init();
-	memory_init(boot_info);
+	memory_init(bootInfo);
 	keyboard_init();
 	RTC_init();
 	PIT_init();

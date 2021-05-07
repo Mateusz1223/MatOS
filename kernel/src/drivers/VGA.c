@@ -30,12 +30,12 @@ static void clear()
 
 //___________________________________________________________________________________________________
 
-void VGA_init(bootinfo* boot_info)
+void VGA_init(bootinfo* bootInfo)
 {
 	VGA.height = 25;
-	if((boot_info->BIOS_equipment_list & 0x30)>>4 == 0x2)
+	if((bootInfo->BIOS_equipment_list & 0x30)>>4 == 0x2)
 		VGA.width = 80;
-	else if((boot_info->BIOS_equipment_list & 0x30)>>4 == 0x1)
+	else if((bootInfo->BIOS_equipment_list & 0x30)>>4 == 0x1)
 		VGA.width = 40;
 
 	VGA.textram = (unsigned char *)0xb8000;

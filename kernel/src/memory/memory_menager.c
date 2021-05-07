@@ -5,14 +5,31 @@
 #include "inc/UI/terminal.h"
 #include "inc/drivers/VGA.h"
 
-
+/*
+Memory structure
+________________
+0 
+	stack at 0x0007fff0
+0x?????? (info in memory map)
+	Reserved
+0x100000
+	Allocation Memory Map (1/8 MiB)
+0x120000
+	Heap (2 7/8 MiB)
+0x400000
+	Kernel
+0x4????? (info in boot_info structure)
+	Pages
+0x?????? (info in memory map)
+... Not important
+*/
 
 //AMM - allocation memory map
 
 // block size (4k)
-#define AMM_BLOCK_SIZE	4096
+#define AMM_PAGE_SIZE	4096
 
-#define AMM_SIZE 1048576 // in bytes
+#define AMM_SIZE 1048576 / 8 // in bytes
 
 //definition of structure
 typedef struct MemoryMapEntry {
@@ -33,10 +50,12 @@ struct MemoryMap {
 struct AMMStruct {
 	// 1 MiB for allocation memory map (4GB)
 	uint32_t *addr;
+	// index of first block after reserved memory (after kernel)
+	int lastReservedBlock;	
 	// number of blocks currently in use
 	uint32_t usedBlocks;
 	// maximum number of available memory blocks
-	uint32_t maxBlocks; // AMM_SIZE * AMM_BLOCK_SIZE = 4 294 967 296 (4 GB)
+	uint32_t maxBlocks; // AMM_SIZE * 8 * 8 * AMM_PAGE_SIZE = 4 294 967 296 (4 GB)
 }AMM;
 
 //_________________________________________________________________________________________
@@ -75,7 +94,8 @@ static bool amm_test(int bit)
 
 static int amm_first_free() 
 {
-	for (uint32_t i=0; i< AMM.maxBlocks / 32; i++)
+	uint32_t i = AMM.lastReservedBlock / 32;
+	for (i=0; i< AMM.maxBlocks / 32; i++)
 		if (AMM.addr[i] != 0xffffffff)
 			for (int j=0; j<32; j++) {		//! test each bit in the dword
  
@@ -93,10 +113,10 @@ static void init_regions()
 	{
 		if(MemoryMap.map[i].type==1 && MemoryMap.map[i].baseAddress>0x000FFFFF) // make sure it is free for use section and it is not section 0 - 0x9f000 (reserved for stack)
 		{
-			int base = MemoryMap.map[i].baseAddress/AMM_BLOCK_SIZE;
-			if(MemoryMap.map[i].baseAddress%AMM_BLOCK_SIZE != 0)
+			int base = MemoryMap.map[i].baseAddress/AMM_PAGE_SIZE;
+			if(MemoryMap.map[i].baseAddress%AMM_PAGE_SIZE != 0)
 				base++;
-			int count = MemoryMap.map[i].length/AMM_BLOCK_SIZE;
+			int count = MemoryMap.map[i].length/AMM_PAGE_SIZE;
 
 			amm_unset_multiple(base, count);
 			AMM.usedBlocks = AMM.usedBlocks-count;
@@ -104,11 +124,11 @@ static void init_regions()
 	}
 }
 
-static void allocate_multiple(int addr, size_t size)
+static void reserve_multiple(int addr, size_t size)
 {
-	int base = addr/AMM_BLOCK_SIZE;
-	int count = size/AMM_BLOCK_SIZE;
-	if(count * AMM_BLOCK_SIZE < size)
+	int base = addr/AMM_PAGE_SIZE;
+	int count = size/AMM_PAGE_SIZE;
+	if(count * AMM_PAGE_SIZE < size)
 		count++;
 
 	amm_set_multiple(base, count);
@@ -146,36 +166,37 @@ static void print_memory_map()
 //_________________________________________________________________________________________
 
 
-void memory_init(bootinfo *boot_info)
+void memory_init(bootinfo *bootInfo)
 {
 	// Memory map init
-	MemoryMap.length = boot_info->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
-	MemoryMap.map = boot_info->mmap_addr;
+	MemoryMap.length = bootInfo->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
+	MemoryMap.map = bootInfo->mmap_addr;
 
 	print_memory_map();
 
 	// AMM init
 
 	AMM.addr = (uint32_t *)0x00100000; // 0x00100000-0x00EFFFFF	0x00E00000 (14 MiB)	RAM -- free for use (if it exists)	Extended memory 1, 2
-	AMM.maxBlocks = AMM_SIZE;
+	AMM.maxBlocks = AMM_SIZE * 8;
 	memsetk(AMM.addr, 0xff, AMM.maxBlocks); // mark every page as used
 
 	AMM.usedBlocks = AMM.maxBlocks;
 
 	init_regions();
 
-	allocate_multiple(0x100000, AMM_SIZE); // Allocate AMM
-	allocate_multiple(0x100000 + AMM_SIZE, 0x400000 - 0x100000 - AMM_SIZE); // Allocate Heap
-	allocate_multiple(boot_info->kernel_base, boot_info->kernel_img_size); // Allocate Kernel
+	reserve_multiple(0x100000, AMM_SIZE); // Allocate AMM
+	reserve_multiple(0x100000 + AMM_SIZE, 0x400000 - 0x100000 - AMM_SIZE); // Allocate Heap
+	reserve_multiple(bootInfo->kernel_base, bootInfo->kernel_img_size); // Allocate Kernel
+	AMM.lastReservedBlock = (bootInfo->kernel_base + bootInfo->kernel_img_size) / AMM_PAGE_SIZE;
 
 	// heap initialization
 	heap_init((void *)(0x100000 + AMM_SIZE + 0x10), (size_t)(0x400000 - 0x100000 - AMM_SIZE - 0x10)); // 0x10 for security reasons
 
 	// debug print
-	terminal_print(debugTerminal, "Kernel loaded at %x, size of kernel: %d B\n", boot_info->kernel_base, boot_info->kernel_img_size);
+	terminal_print(debugTerminal, "Kernel loaded at %x, size of kernel: %d B\n", bootInfo->kernel_base, bootInfo->kernel_img_size);
 	terminal_print(debugTerminal, "Stack at 0x0007FFF0\n"); 
 
-	terminal_print(debugTerminal, "Free blocks: %d (%d MiB)\n", get_free_block_count(), get_free_block_count() * AMM_BLOCK_SIZE / 1048576); // 1048576 size of 1 MB in bytes
+	terminal_print(debugTerminal, "Free blocks: %d (%d MiB)\n", get_free_block_count(), get_free_block_count() * AMM_PAGE_SIZE / 1048576); // 1048576 size of 1 MB in bytes
 
 	terminal_print(debugTerminal, "Memory ready!\n");
 }
@@ -192,7 +213,7 @@ void *memory_alloc_block()
  
 	amm_set(frame);
  
-	uint32_t addr = frame * AMM_BLOCK_SIZE;
+	uint32_t addr = frame * AMM_PAGE_SIZE;
 
 	AMM.usedBlocks++;
  
@@ -203,7 +224,7 @@ void *memory_alloc_block()
 void memory_free_block(void* p)
 {
 	uint32_t addr = (uint32_t)p;
-	int frame = addr / AMM_BLOCK_SIZE;
+	int frame = addr / AMM_PAGE_SIZE;
  
 	amm_unset(frame);
 

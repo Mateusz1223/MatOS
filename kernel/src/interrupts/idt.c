@@ -103,6 +103,9 @@ void idt_init()
 	
 	for(int i=0; i<16; i++)
 		SETIDTDESCR(IDT[i+32], irq_handlers[i]);
+
+	//Rest of ISR like:
+	//SETIDTDESCR(IDT[48], API_isr);
 	
 	__asm("lidt %0" : : "m"(ptr));
 
