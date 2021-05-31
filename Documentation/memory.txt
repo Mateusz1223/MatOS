@@ -4,18 +4,18 @@ Stack at 0x0007FFF0 -> 0x00007E00-0x0007FFFF - 480.5 KiB RAM (guaranteed free fo
 
 Memory structure
 ________________
-0 
-	stack at 0x0007fff0
-0x?????? (info in memory map)
-	Reserved
-0x100000
-	Allocation Memory Map (1/8 MiB)
-0x120000
-	Heap (2 7/8 MiB)
-0x400000
-	Kernel
-0x4????? (info in boot_info structure)
-	Pages
+0                                            -
+	stack at 0x0007fff0                   |
+0x?????? (info in memory map)                 |
+	Reserved                              |
+0x100000                                      |
+	Allocation Memory Map (1/8 MiB)       |
+0x120000                                      | 8 MiB, identity mapped in virtual memory (2 Paging Tables)
+	Heap (2 7/8 MiB)                      |
+0x400000                                      |
+	Kernel                                |
+0x4????? (info in boot_info structure)        |
+	Pages                                -
 0x?????? (info in memory map)
 
 ... Not important

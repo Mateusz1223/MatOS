@@ -9,7 +9,7 @@ static struct HeapStructure
 	size_t size;
 } Heap;
 
-typedef struct HeapEntry {
+struct HeapEntry {
 	uint8_t *prev;
 	size_t size; // without HeapEntry itself
 	bool free;

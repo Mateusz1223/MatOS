@@ -1,6 +1,7 @@
 #include "inc/memory/memory_menager.h"
 
 #include "inc/memory/heap.h"
+#include "inc/memory/paging.h"
 
 #include "inc/UI/terminal.h"
 #include "inc/drivers/VGA.h"
@@ -32,12 +33,12 @@ ________________
 #define AMM_SIZE 1048576 / 8 // in bytes
 
 //definition of structure
-typedef struct MemoryMapEntry {
+struct MemoryMapEntry {
 	uint64_t baseAddress;
 	uint64_t length;
 	uint32_t type; // 1 -> Free Memory, 2 -> Reserved Memory, 3 -> ACPI reclaimable memory, 4 -> ACPI NVS memory. 5 -> Area containing bad memory
 	uint32_t acpiNull;
-}__attribute__((packed));
+} __attribute__((packed));
 
 typedef struct MemoryMapEntry MemoryMapEntry;
 
@@ -45,7 +46,7 @@ typedef struct MemoryMapEntry MemoryMapEntry;
 struct MemoryMap {
 	int length;
 	MemoryMapEntry *map;
-}__attribute__((packed)) MemoryMap;
+} __attribute__((packed)) MemoryMap;
 
 struct AMMStruct {
 	// 1 MiB for allocation memory map (4GB)
@@ -197,6 +198,8 @@ void memory_init(bootinfo *bootInfo)
 	terminal_print(debugTerminal, "Stack at 0x0007FFF0\n"); 
 
 	terminal_print(debugTerminal, "Free blocks: %d (%d MiB)\n", get_free_block_count(), get_free_block_count() * AMM_PAGE_SIZE / 1048576); // 1048576 size of 1 MB in bytes
+
+	paging_init();
 
 	terminal_print(debugTerminal, "Memory ready!\n");
 }
