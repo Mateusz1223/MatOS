@@ -155,7 +155,7 @@ void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 			}
 			else
 			{
-				terminal_print(&UIManager.terminals[i], "%s\n", UIManager.termInputBuffers[i]);
+				terminal_print(&UIManager.terminals[i], "%s\n", UIManager.termInputBuffers[i]); // unknow command in the future DEBUG
 			}
 
 			terminal_print(&UIManager.terminals[i], "> ");
@@ -229,16 +229,12 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 		UIManager.taskbarUpdated = true;
 	}
 
-	// Debug
-
 	if(keyIdLookUpTable[keyId] == 8)
 	{
-		//terminal_print(debugTerminal, "\nBACKSPACE\n");
 		terminal_backspace_in_scan_buffer(UIManager.currentTerminal);
 	}
 	else if(keyIdLookUpTable[keyId] == 127)
 	{
-		//terminal_print(debugTerminal, "\nDELETE\n");
 		terminal_delete_in_scan_buffer(UIManager.currentTerminal);
 	}
 	else if(keyIdLookUpTable[keyId] == -1)
@@ -262,7 +258,8 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 	else
 	{
 		bool upperCase = false;
-		if(keyboard_is_key_pressed(56) || keyboard_is_key_pressed(67)) // if SHIFT is pressed
+		bool shiftPressed = keyboard_is_key_pressed(56) || keyboard_is_key_pressed(67);
+		if(shiftPressed)
 			upperCase = true;
 
 		if(keyboard_is_caps_lock())
@@ -277,6 +274,60 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 
 		if(97 <= (int)ch && (int)ch <= 122 && upperCase)
 			ch -= 32;
+		else if(48 <= (int)ch && (int)ch <= 57 && shiftPressed)
+		{
+			char translation[] = {')','!','@','#','$','%','^','&','*','('};
+			ch = translation[(int)ch - 48];
+		}
+		else if(shiftPressed) // lookup table may be a better solution
+		{
+			switch(ch)
+			{
+			case '`':
+				ch = '~';
+			break;
+
+			case '-':
+				ch = '_';
+			break;
+
+			case '=':
+				ch = '+';
+			break;
+
+			case '[':
+				ch = '{';
+			break;
+
+			case ']':
+				ch = '}';
+			break;
+
+			case ';':
+				ch = ':';
+			break;
+
+			case '\'':
+				ch = '"';
+			break;
+
+			case '\\':
+				ch = '|';
+			break;
+
+			case ',':
+				ch = '<';
+			break;
+
+			case '.':
+				ch = '>';
+			break;
+
+			case '/':
+				ch = '?';
+			break;
+			}
+		}
 
 		terminal_putchar(debugTerminal, keyIdLookUpTable[keyId]);
 		terminal_add_char_to_scan_buffer(UIManager.currentTerminal, ch);

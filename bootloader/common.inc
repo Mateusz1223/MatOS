@@ -58,7 +58,7 @@ load_kernel: ; ret eax = entry point , edx = ImageBase, edi = SizeOfImage
   mov eax, [0x00007E00+0x3C];PE offset
 
   xor ecx, ecx
-  mov cx, [0x00007E00+eax+0x50] ;SizeOfImage
+  mov ecx, [0x00007E00+eax+0x50] ;SizeOfImage
   push ecx; push SizeOfImage
 
   xor ecx, ecx

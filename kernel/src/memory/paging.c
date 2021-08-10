@@ -233,7 +233,7 @@ void paging_init()
 	}
 	memsetk(table2, (uint8_t)0x00, sizeof(pTable));
 
-	//! 1st 4mb are idenitity mapped
+	// 1st 4mb are idenitity mapped
 	for (int i=0, frame=0x0; i<1024; i++, frame+=4096)
 	{
  		// create a new page
@@ -247,6 +247,7 @@ void paging_init()
 		table1->entries[i] = page;
 	}
 
+	// 2nd 4mb are also idenitity mapped
 	for (int i=0, frame=0x400000; i<1024; i++, frame+=4096)
 	{
  		// create a new page

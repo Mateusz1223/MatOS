@@ -10,6 +10,8 @@
 #include "inc/UI/UIManager.h"
 #include "inc/UI/terminal.h"
 
+#include "inc/drivers/busses/ATA.h"
+
 void _start(bootinfo* bootInfo)
 {
 	VGA_init(bootInfo);
@@ -20,6 +22,9 @@ void _start(bootinfo* bootInfo)
 	keyboard_init();
 	RTC_init();
 	PIT_init();
+
+	ATA_check();
+	ATA_init();
 
 	for(;;);
 }

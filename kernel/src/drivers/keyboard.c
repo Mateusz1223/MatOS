@@ -14,7 +14,7 @@ static struct KeyboardState
 
 	bool capsLockActive;
 
-	int to_ignore;
+	int toIgnore;
 
 	bool previous_E0;
 } Keyboard;
@@ -53,7 +53,7 @@ void keyboard_init()
 {
 	Keyboard.capsLockActive = 0;
 
-	Keyboard.to_ignore = 0;
+	Keyboard.toIgnore = 0;
 	Keyboard.previous_E0 = false;
 
 	enable_keyboard_irq();
@@ -84,15 +84,15 @@ void keyboard_irq()
 	terminal_print(debugTerminal, "Keybord interrupt. Scancode: %x\n", ch);
 	screen_set_color(LIGHT_GREEN);*/
 
-	if(Keyboard.to_ignore > 0)
+	if(Keyboard.toIgnore > 0)
 	{
-		Keyboard.to_ignore--;
+		Keyboard.toIgnore--;
 		return;
 	}
 
 	if(ch == 0xE1)
 	{
-		Keyboard.to_ignore = 2;
+		Keyboard.toIgnore = 2;
 		return;
 	}
 	
