@@ -44,21 +44,22 @@ typedef struct Terminal
 
 Terminal *debugTerminal;
 
-void terminal_init( Terminal *this, bool debugMode );
+void terminal_init(Terminal *this, bool debugMode);
 
-int terminal_print( Terminal *this, const char *str, ... ); // returns 0 when print was not possible, 1 when executed properly
-void terminal_putchar( Terminal *this, char ch );
-void terminal_set_color( Terminal *this, char ch );
+void terminal_clear(Terminal *this);
+int terminal_print(Terminal *this, const char *str, ...); // returns 0 when print was not possible, 1 when executed properly
+void terminal_putchar(Terminal *this, char ch);
+void terminal_set_color(Terminal *this, char ch);
 
 // Functions for UI manager keyboard irq resident
-void terminal_scroll_up( Terminal *this );
-void terminal_scroll_down( Terminal *this );
-void terminal_move_cursor_left( Terminal *this );
-void terminal_move_cursor_right( Terminal *this );
-void terminal_add_char_to_scan_buffer( Terminal *this, char ch );
-void terminal_backspace_in_scan_buffer( Terminal *this );
-void terminal_delete_in_scan_buffer( Terminal *this );
-void terminal_end_scan( Terminal *this ); // adds end of string to the end of buffer
+void terminal_scroll_up(Terminal *this);
+void terminal_scroll_down(Terminal *this);
+void terminal_move_cursor_left(Terminal *this);
+void terminal_move_cursor_right(Terminal *this);
+void terminal_add_char_to_scan_buffer(Terminal *this, char ch);
+void terminal_backspace_in_scan_buffer(Terminal *this);
+void terminal_delete_in_scan_buffer(Terminal *this);
+void terminal_end_scan(Terminal *this); // adds end of string to the end of buffer
 
 // tmp
-void terminal_scan( Terminal *this, char *buff, size_t size );
+void terminal_scan(Terminal *this, char *buff, size_t size);

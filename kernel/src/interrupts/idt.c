@@ -6,8 +6,7 @@
 
 #include "inc/UI/terminal.h"
 
-struct IDTEntry
-{
+struct IDTEntry{
    uint16_t offset_0_15; // offset bits 0..15
    uint16_t selector; // a code segment selector in GDT or LDT
    uint8_t zero;      // unused, set to 0
@@ -15,8 +14,7 @@ struct IDTEntry
    uint16_t offset_16_31; // offset bits 16..31
 }__attribute__((packed));
 
-struct IDTR
-{
+struct IDTR{
 	uint16_t limit;
 	uint32_t base;
 }__attribute__((packed));
@@ -25,7 +23,7 @@ typedef struct IDTEntry IDTEntry;
 typedef struct IDTR IDTR;
 
 
-#define SETIDTDESCR(d, offset) { \
+#define SETIDTDESCR(d, offset){ \
 	d.offset_0_15 = ((uint32_t)offset & 0xffff); \
 	d.selector = 0x8; \
 	d.zero = 0; \
@@ -94,8 +92,7 @@ IDTR ptr = {
 		(uint32_t)&IDT
 	};
 
-void idt_init()
-{
+void idt_init(){
 	PIC_init();
 
 	for(int i=0; i<32; i++)

@@ -6,7 +6,7 @@
 
 #include "inc/interrupts/interrupts.h"
 
-char *int_reasons[32] ={
+char *int_reasons[32] = {
 	"Divide Error",
 	"Debug Exception",
 	"NMI Interrupt",
@@ -41,8 +41,7 @@ char *int_reasons[32] ={
 	"Intel reserved. I have no idea how it happend!!!!",
 };
 
-void interrupt_handler(uint32_t int_num, TrapFrame *frame)
-{
+void interrupt_handler(uint32_t int_num, TrapFrame *frame){
 	disable_interrupts();
 
 	terminal_set_color(debugTerminal, RED);

@@ -155,7 +155,10 @@ void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 
 		if(UIManager.terminals[i].scanInProgress == false){
 			if(strcmp(UIManager.termInputBuffers[i], "help")){
-				terminal_print(&UIManager.terminals[i], " Type:\n\thelp -> to see help message\n\tno more features yet\n\n");
+				terminal_print(&UIManager.terminals[i], " Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tno more features yet\n\n");
+			}
+			else if(strcmp(UIManager.termInputBuffers[i], "cls")){
+				terminal_clear(&UIManager.terminals[i]);
 			}
 			else if(UIManager.termInputBufferFilled[i] == true){
 				terminal_set_color(&UIManager.terminals[i], LIGHT_RED);
