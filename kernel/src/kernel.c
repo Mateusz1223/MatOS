@@ -12,8 +12,7 @@
 
 #include "inc/drivers/busses/ATA.h"
 
-void _start(bootinfo* bootInfo)
-{
+void _start(bootinfo* bootInfo){
 	VGA_init(bootInfo);
 	UI_manager_init();
 
@@ -23,8 +22,8 @@ void _start(bootinfo* bootInfo)
 	RTC_init();
 	PIT_init();
 
-	ATA_check();
-	ATA_init();
+	//ATA_check();
+	//ATA_init();
 
 	for(;;);
 }

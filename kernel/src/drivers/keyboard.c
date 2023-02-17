@@ -8,8 +8,7 @@
 #define TASK_GETRESPONSE 0x1
 #define TASK_SCAN 0x2
 
-static struct KeyboardState
-{
+static struct KeyboardState{
 	bool pressedKeys[76]; // 1->75, 0 is undefined key, [id]
 
 	bool capsLockActive;
@@ -19,26 +18,22 @@ static struct KeyboardState
 	bool previous_E0;
 } Keyboard;
 
-typedef struct KeyboardAction
-{
+typedef struct KeyboardAction{
 	int id;
 	bool released; // false -> key pressed, true -> key released
 } KeyboardAction;
 
 // __________________________________________________________________________
 
-void disable_keyboard_irq()
-{
+void disable_keyboard_irq(){
 	IRQ_set_mask(1);
 }
 
-void enable_keyboard_irq()
-{
+void enable_keyboard_irq(){
 	IRQ_clear_mask(1);
 }
 
-char getScancode()
-{
+char getScancode(){
 	while(1)
 	{
 		unsigned char c = inb(0x60);
@@ -49,8 +44,7 @@ char getScancode()
 
 // __________________________________________________________________________
 
-void keyboard_init()
-{
+void keyboard_init(){
 	Keyboard.capsLockActive = 0;
 
 	Keyboard.toIgnore = 0;
@@ -62,21 +56,18 @@ void keyboard_init()
 }
 
 
-bool keyboard_is_key_pressed(int id)
-{
+bool keyboard_is_key_pressed(int id){
 	if(id < 0 || id >= 76)
 		return false;
 	
 	return Keyboard.pressedKeys[id];
 }
 
-bool keyboard_is_caps_lock()
-{
+bool keyboard_is_caps_lock(){
 	return Keyboard.capsLockActive;
 }
 
-void keyboard_irq()
-{
+void keyboard_irq(){
 	unsigned char ch = getScancode();
 
 	// debug

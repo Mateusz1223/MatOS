@@ -68,23 +68,20 @@ Bits 12-31 (FRAME): Page Table Base address
 */
 
 // page table
-struct pTable
-{
+struct pTable{
 	PTE entries[1024];
 } __attribute__((packed)); // make sure it's not alligned by compiler
 
 typedef struct pTable pTable;
  
 // page directory
-struct pDirectoryTable
-{
+struct pDirectoryTable{
 	PDE entries[1024];
 } __attribute__((packed)); // make sure it's not alligned by compiler
 
 typedef struct pDirectoryTable pDirectoryTable;
 
-static struct PagingStruct
-{
+static struct PagingStruct{
 	pDirectoryTable *currPDirectoryTable;
 } Paging;
 
@@ -92,16 +89,14 @@ static struct PagingStruct
 
 
 //              --------PTE--------
-static void PTE_set_present_flag(PTE *p, bool b)
-{
+static void PTE_set_present_flag(PTE *p, bool b){
 	if(b)
 		*p |= 1;
 	else
 		*p &= (uint32_t)(0xffffffff - 1);
 }
 
-inline static bool PTE_is_present(PTE p)
-{
+inline static bool PTE_is_present(PTE p){
 	return p & 1;
 }
 
@@ -121,30 +116,26 @@ static void PTE_set_usm_flag(PTE *p, bool b) // User/Supervisor mode flag set
 		*p &= (uint32_t)(0xffffffff - 4);
 }
 
-static void PTE_set_adress(PTE *p, uint32_t address)
-{
+static void PTE_set_adress(PTE *p, uint32_t address){
 	address &= (uint32_t)0xfffff000;
 	*p &= (uint32_t)0x00000fff;
 	*p |= address;
 }
 
-static uint32_t PTE_get_adress(PTE p)
-{
+static uint32_t PTE_get_adress(PTE p){
 	return p & (uint32_t)0xfffff000;
 }
 
 //              --------PDE--------
 
-static void PDE_set_present_flag(PDE *p, bool b)
-{
+static void PDE_set_present_flag(PDE *p, bool b){
 	if(b)
 		*p |= 1;
 	else
 		*p &= (uint32_t)(0xffffffff - 1);
 }
 
-inline static bool PDE_is_present(PDE p)
-{
+inline static bool PDE_is_present(PDE p){
 	return p & 1;
 }
 
@@ -195,13 +186,11 @@ static void PDE_set_adress(PDE *p, uint32_t address)
 	*p |= address;
 }
 
-static uint32_t PDE_get_adress(PDE p)
-{
+static uint32_t PDE_get_adress(PDE p){
 	return p & (uint32_t)0xfffff000;
 }
 
-static void enable_paging()
-{
+static void enable_paging(){
 	uint32_t cr0;
 
 	__asm("mov %%cr3, %0" : : "r" (Paging.currPDirectoryTable)); // __asm("mov %0, %%cr3" : : "r" (Paging.currPDirectoryTable)); is a wrong order. It surprises me as I thought it uses Source before the destination syntax. 
@@ -213,12 +202,10 @@ static void enable_paging()
 
 //_________________________________________________________________________________________
 
-void paging_init()
-{
+void paging_init(){
 	// 0-4 MiB (identity mapped)
 	pTable *table1 = (pTable *)memory_alloc_block();
-	if (!table1)
-	{
+	if (!table1){
 		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization failed - no space for Paging Table 1");
 		return;
 	}
@@ -226,16 +213,14 @@ void paging_init()
  
 	// 4 MiB - 8MiB (identity mapped)
 	pTable *table2 = (pTable *)memory_alloc_block();
-	if (!table2)
-	{
+	if (!table2){
 		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization - failed no space for Paging Table 2");
 		return;
 	}
 	memsetk(table2, (uint8_t)0x00, sizeof(pTable));
 
 	// 1st 4mb are idenitity mapped
-	for (int i=0, frame=0x0; i<1024; i++, frame+=4096)
-	{
+	for (int i=0, frame=0x0; i<1024; i++, frame+=4096){
  		// create a new page
 		PTE page = 0;
 		PTE_set_adress(&page, frame);
@@ -248,8 +233,7 @@ void paging_init()
 	}
 
 	// 2nd 4mb are also idenitity mapped
-	for (int i=0, frame=0x400000; i<1024; i++, frame+=4096)
-	{
+	for (int i=0, frame=0x400000; i<1024; i++, frame+=4096){
  		// create a new page
 		PTE page = 0;
 		PTE_set_adress (&page, frame);
@@ -263,8 +247,7 @@ void paging_init()
 
 	// create default directory table
 	pDirectoryTable *dir = (pDirectoryTable *)memory_alloc_block(); // memory_alloc_block() returns 4096 alligned pointer
-	if (!dir)
-	{
+	if (!dir){
 		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization failed no space for Paging Directory Table");
 		return;
 	}
@@ -288,8 +271,7 @@ void paging_init()
 	terminal_print(debugTerminal, "Paging initialized and enabled!\n");
 }
 
-void paging_flush_tlb_entry( uint32_t addr )
-{
+void paging_flush_tlb_entry( uint32_t addr ){
 	disable_interrupts();
 	__asm("invlpg %0" : : "m"(addr));
 	enable_interrupts();
@@ -320,22 +302,19 @@ void paging_free_page( PTE *e ) // don't know whether useful
 	PTE_set_present_flag(e, false);
 }
 
-inline PTE *paging_ptable_lookup_entry( pTable *p, uint32_t addr )
-{
+inline PTE *paging_ptable_lookup_entry( pTable *p, uint32_t addr ){
 	if (p)
 		return &p->entries[ PAGE_TABLE_INDEX(addr) ];
 	return 0;
 }
 
-inline PDE *paging_pdirectory_table_lookup_entry( pDirectoryTable *p, uint32_t addr )
-{
+inline PDE *paging_pdirectory_table_lookup_entry( pDirectoryTable *p, uint32_t addr ){
 	if (p)
 		return &p->entries[ PAGE_TABLE_INDEX(addr) ];
 	return 0;
 }
 
-void paging_map_page( void *phys, void *virt )
-{
+void paging_map_page( void *phys, void *virt ){
 	// get page directory
 	pDirectoryTable *pageDirectory = Paging.currPDirectoryTable;
 

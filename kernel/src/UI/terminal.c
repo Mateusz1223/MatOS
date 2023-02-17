@@ -5,8 +5,7 @@
 
 //___________________________________________________________________________________________________
 
-static void check_last_character_y( Terminal *this)
-{
+static void check_last_character_y(Terminal *this){
 	if(this->lastCharacterY >= this->displayY+this->height)
 		terminal_scroll_down(this);
 
@@ -22,8 +21,7 @@ static void check_last_character_y( Terminal *this)
 
 		this->cursorY -= this->buffSize / this->width / 2;
 
-		this->displayY -= this->buffSize / this->width / 2;
-		this->displayY++;
+		this->displayY = 15;
 		this->lastCharacterY -= this->buffSize / this->width / 2;
 
 		this->scanBuffer.pos -=  this->buffSize / 2; // ?????
@@ -32,8 +30,7 @@ static void check_last_character_y( Terminal *this)
 	}
 }
 
-static void next_line( Terminal *this)
-{
+static void next_line(Terminal *this){
 	this->cursorY++;
 	this->cursorX = 0;
 
@@ -41,8 +38,7 @@ static void next_line( Terminal *this)
 	check_last_character_y(this);
 }
 
-static void put_character( Terminal *this, char ch)
-{
+static void put_character(Terminal *this, char ch){
 	switch(ch)
 		{
 			case '\n':
@@ -78,8 +74,7 @@ static void put_character( Terminal *this, char ch)
 		}
 }
 
-static void put_text( Terminal *this, char *str )
-{
+static void put_text(Terminal *this, char *str){
 	while(*str != '\0')
 	{
 		put_character(this, *str);
@@ -87,8 +82,7 @@ static void put_text( Terminal *this, char *str )
 	}
 }
 
-static void print_uint( Terminal *this, unsigned int d )
-{
+static void print_uint(Terminal *this, unsigned int d){
 	if(d==0)
 	{
 		put_character(this, '0');
@@ -107,8 +101,7 @@ static void print_uint( Terminal *this, unsigned int d )
 	put_text(this, p);
 }
 
-static void print_int( Terminal *this, int d )
-{	
+static void print_int(Terminal *this, int d){	
 	if(d<0)
 	{
 		d=-d;
@@ -118,7 +111,7 @@ static void print_int( Terminal *this, int d )
 	print_uint(this, (unsigned int) d);
 }
 
-static void print_hex( Terminal *this, unsigned int d ) //Seem to be fine but used to crush system
+static void print_hex(Terminal *this, unsigned int d) //Seem to be fine but used to crush system
 {
 	put_text(this, "0x");
 	
@@ -144,16 +137,14 @@ static void print_hex( Terminal *this, unsigned int d ) //Seem to be fine but us
 	}
 }
 
-static void print_bool( Terminal *this, bool b )
-{
+static void print_bool(Terminal *this, bool b){
 	if(b)
 		put_text(this, "true");
 	else
 		put_text(this, "false");
 }
 
-void terminal_scan( Terminal *this, char *buff, size_t size )
-{
+void terminal_scan(Terminal *this, char *buff, size_t size){
 	this->scanInProgress = true;
 
 	this->scanBuffer.buffer = buff;
@@ -168,9 +159,8 @@ void terminal_scan( Terminal *this, char *buff, size_t size )
 
 //___________________________________________________________________________________________________
 
-void terminal_init( Terminal *this, bool debugMode )
-{
-	this->buffSize = 4000; // in the future buffer will be dynamically allocated (it will be buffer size in bytes divided by 2)
+void terminal_init(Terminal *this, bool debugMode){
+	this->buffSize = 4000; // in the future buffer will be dynamically allocated (it will be a buffer size in bytes divided by 2)
 
 	UI_manager_get_display_size(&this->width, &this->height);
 	this->cursorX = 0;
@@ -195,9 +185,10 @@ void terminal_init( Terminal *this, bool debugMode )
 
 	if(debugMode)
 	{
-		terminal_set_color(this, RED | BLINKING);
+		terminal_set_color(this, LIGHT_RED | BLINKING);
 		terminal_print(this, "This terminal is currently a debug terminal\n\n");
 		terminal_set_color(this, LIGHT_GREEN);
+		this->cursorEnabled = false;
 	}
 	else
 	{
@@ -207,7 +198,7 @@ void terminal_init( Terminal *this, bool debugMode )
 	this->displayUpdated = true;
 }
 
-int terminal_print( Terminal *this, const char *str, ... ) // May not work properly. May mix order
+int terminal_print(Terminal *this, const char *str, ...) // May not work properly. May mix order
 {
 	if(this->scanInProgress)
 		return 0;
@@ -257,16 +248,14 @@ int terminal_print( Terminal *this, const char *str, ... ) // May not work prope
 	return 1;
 }
 
-void terminal_putchar( Terminal *this, char ch )
-{
+void terminal_putchar(Terminal *this, char ch){
 	char str[2];
 	str[0] = ch;
 	str[1] = 0;
 	terminal_print(this, str);
 }
 
-void terminal_set_color( Terminal *this, char ch )
-{
+void terminal_set_color(Terminal *this, char ch){
 	this->color = ch;
 
 	int pos = (this->cursorY * this->width + this->cursorX)*2 + 1;
@@ -275,8 +264,7 @@ void terminal_set_color( Terminal *this, char ch )
 
 // Functions for UI manager keyboard irq resident
 
-void terminal_scroll_up( Terminal *this )
-{
+void terminal_scroll_up(Terminal *this){
 	this->displayY--;
 	if(this->displayY < 0)
 		this->displayY = 0;
@@ -284,8 +272,7 @@ void terminal_scroll_up( Terminal *this )
 	this->displayUpdated = true;
 }
 
-void terminal_scroll_down(Terminal *this)
-{
+void terminal_scroll_down(Terminal *this){
 	this->displayY++;
 	if(this->displayY + this->height >= this->buffSize / this->width)
 		this->displayY--;
@@ -293,8 +280,7 @@ void terminal_scroll_down(Terminal *this)
 	this->displayUpdated = true;
 }
 
-void terminal_move_cursor_left( Terminal *this )
-{
+void terminal_move_cursor_left(Terminal *this){
 	if(!this->scanInProgress)
 		return;
 
@@ -310,8 +296,7 @@ void terminal_move_cursor_left( Terminal *this )
 	this->displayUpdated = true;
 }
 
-void terminal_move_cursor_right( Terminal *this )
-{
+void terminal_move_cursor_right(Terminal *this){
 	if(!this->scanInProgress)
 		return;
 
@@ -327,15 +312,14 @@ void terminal_move_cursor_right( Terminal *this )
 	this->displayUpdated = true;
 }
 
-void terminal_add_char_to_scan_buffer( Terminal *this, char ch )
-{
+void terminal_add_char_to_scan_buffer(Terminal *this, char ch){
 	if(!this->scanInProgress)
 		return;
 
 	if(ch == '\t')
 	{
 		for(int i=0; i<4; i++)
-			terminal_add_char_to_scan_buffer( this, ' ' );
+			terminal_add_char_to_scan_buffer(this, ' ');
 
 		return;
 	}
@@ -366,8 +350,7 @@ void terminal_add_char_to_scan_buffer( Terminal *this, char ch )
 	this->displayUpdated = true;
 }
 
-void terminal_backspace_in_scan_buffer( Terminal *this )
-{
+void terminal_backspace_in_scan_buffer(Terminal *this){
 	if(!this->scanInProgress)
 		return;
 
@@ -398,8 +381,7 @@ void terminal_backspace_in_scan_buffer( Terminal *this )
 	this->displayUpdated = true;
 }
 
-void terminal_delete_in_scan_buffer( Terminal *this )
-{
+void terminal_delete_in_scan_buffer(Terminal *this){
 	if(!this->scanInProgress)
 		return;
 
@@ -423,8 +405,7 @@ void terminal_delete_in_scan_buffer( Terminal *this )
 	this->displayUpdated = true;
 }
 
-void terminal_end_scan( Terminal *this )
-{
+void terminal_end_scan(Terminal *this){
 	if(!this->scanInProgress)
 		return;
 
@@ -440,5 +421,5 @@ void terminal_end_scan( Terminal *this )
 
 // Threads
 
-void terminal_debug_thread( Terminal *this );
-void terminal_classic_thread( Terminal *this );
+void terminal_debug_thread(Terminal *this);
+void terminal_classic_thread(Terminal *this);

@@ -3,13 +3,12 @@
 #include "inc/UI/terminal.h"
 #include "inc/drivers/VGA.h"
 
-static struct HeapStructure
-{
+static struct HeapStructure{
 	uint8_t *addr;
 	size_t size;
 } Heap;
 
-struct HeapEntry {
+struct HeapEntry{
 	uint8_t *prev;
 	size_t size; // without HeapEntry itself
 	bool free;
@@ -19,8 +18,7 @@ typedef struct HeapEntry HeapEntry;
 
 //_________________________________________________________________________________________
 
-static void debug_print_entries()
-{
+static void debug_print_entries(){
 	terminal_set_color(debugTerminal, RED);
 	terminal_print(debugTerminal, "Heap entries:\n");
 	uint8_t *it = Heap.addr;
@@ -60,8 +58,7 @@ void heap_init(void *addr, size_t size) // size in bytes
 	//debug_print_entries();
 }
 
-void *heap_malloc(size_t size)
-{
+void *heap_malloc(size_t size){
 	uint8_t *it = Heap.addr;
 
 	while(it < (uint8_t *)(Heap.addr + Heap.size))
@@ -100,8 +97,7 @@ void *heap_malloc(size_t size)
 	return 0; // Error, sufficient memory block hasn't been found
 }
 
-void heap_free(void *addr)
-{
+void heap_free(void *addr){
 	uint8_t *ad = (uint8_t *)addr;
 	ad -= sizeof(HeapEntry);
 	HeapEntry *entry = (HeapEntry *)ad;

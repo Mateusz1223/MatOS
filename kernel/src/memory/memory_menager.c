@@ -33,7 +33,7 @@ ________________
 #define AMM_SIZE 1048576 / 8 // in bytes
 
 //definition of structure
-struct MemoryMapEntry {
+struct MemoryMapEntry{
 	uint64_t baseAddress;
 	uint64_t length;
 	uint32_t type; // 1 -> Free Memory, 2 -> Reserved Memory, 3 -> ACPI reclaimable memory, 4 -> ACPI NVS memory. 5 -> Area containing bad memory
@@ -43,7 +43,7 @@ struct MemoryMapEntry {
 typedef struct MemoryMapEntry MemoryMapEntry;
 
 //existing structure 
-struct MemoryMap {
+struct MemoryMap{
 	int length;
 	MemoryMapEntry *map;
 } __attribute__((packed)) MemoryMap;
@@ -61,18 +61,15 @@ struct AMMStruct {
 
 //_________________________________________________________________________________________
 
-static uint32_t get_free_block_count()
-{
+static uint32_t get_free_block_count(){
 	return AMM.maxBlocks - AMM.usedBlocks;
 }
 
-static void amm_set(int bit)
-{
+static void amm_set(int bit){
 	AMM.addr[bit / 32] |= (1 << (bit % 32));
 }
 
-static void amm_unset(int bit)
-{
+static void amm_unset(int bit){
  	AMM.addr[bit / 32] &= ~ (1 << (bit % 32));
 }
 
@@ -88,8 +85,7 @@ static void amm_unset_multiple(int base, size_t count) //to be speed up
 		amm_unset(i);
 }
 
-static bool amm_test(int bit)
-{
+static bool amm_test(int bit){
  	return AMM.addr[bit / 32] &  (1 << (bit % 32));
 }
 
@@ -108,12 +104,9 @@ static int amm_first_free()
 	return -1;
 }
 
-static void init_regions()
-{
-	for(int i=0; i<MemoryMap.length; i++)
-	{
-		if(MemoryMap.map[i].type==1 && MemoryMap.map[i].baseAddress>0x000FFFFF) // make sure it is free for use section and it is not section 0 - 0x9f000 (reserved for stack)
-		{
+static void init_regions(){
+	for(int i=0; i<MemoryMap.length; i++){
+		if(MemoryMap.map[i].type==1 && MemoryMap.map[i].baseAddress>0x000FFFFF){ // make sure it is free for use section and it is not section 0 - 0x9f000 (reserved for stack)
 			int base = MemoryMap.map[i].baseAddress/AMM_PAGE_SIZE;
 			if(MemoryMap.map[i].baseAddress%AMM_PAGE_SIZE != 0)
 				base++;
@@ -125,8 +118,7 @@ static void init_regions()
 	}
 }
 
-static void reserve_multiple(int addr, size_t size)
-{
+static void reserve_multiple(int addr, size_t size){
 	int base = addr/AMM_PAGE_SIZE;
 	int count = size/AMM_PAGE_SIZE;
 	if(count * AMM_PAGE_SIZE < size)
@@ -136,8 +128,7 @@ static void reserve_multiple(int addr, size_t size)
 	AMM.usedBlocks += count;
 }
 
-static void print_memory_map_entry(MemoryMapEntry *map_entry)
-{
+static void print_memory_map_entry(MemoryMapEntry *map_entry){
 	terminal_print(debugTerminal, "%x | ", map_entry->baseAddress);
 	terminal_print(debugTerminal, "%x | ", map_entry->length);
 	terminal_print(debugTerminal, "%x\n", map_entry->type);
@@ -145,8 +136,7 @@ static void print_memory_map_entry(MemoryMapEntry *map_entry)
 	//terminal_print(debugTerminal, "%x | %x | %x\n\n",map_entry->baseAddress, map_entry->length, map_entry->type); //doesn't work to be fixed
 }
 
-static void print_memory_map()
-{
+static void print_memory_map(){
 	terminal_print(debugTerminal, "_____________________________\n");
 	terminal_set_color(debugTerminal, BACKGROUND_GREEN);
 	terminal_print(debugTerminal, "Memory Map:\n");
@@ -157,9 +147,7 @@ static void print_memory_map()
 	int c = MemoryMap.length/24;
 
 	for(int i=0; i<c; i++)
-	{
 		print_memory_map_entry(&MemoryMap.map[i]);
-	}
 
 	terminal_print(debugTerminal, "_____________________________\n");
 }
@@ -167,8 +155,7 @@ static void print_memory_map()
 //_________________________________________________________________________________________
 
 
-void memory_init(bootinfo *bootInfo)
-{
+void memory_init(bootinfo *bootInfo){
 	// Memory map init
 	MemoryMap.length = bootInfo->mmap_length;  //1 047 488; 0x3fef0  vs 1 046 464‬
 	MemoryMap.map = bootInfo->mmap_addr;
@@ -204,8 +191,7 @@ void memory_init(bootinfo *bootInfo)
 	terminal_print(debugTerminal, "Memory ready!\n");
 }
 
-void *memory_alloc_block()
-{
+void *memory_alloc_block(){
 	if (get_free_block_count() <= 0)
 		return 0;	//out of memory
  
@@ -224,8 +210,7 @@ void *memory_alloc_block()
 }
 
 
-void memory_free_block(void* p)
-{
+void memory_free_block(void* p){
 	uint32_t addr = (uint32_t)p;
 	int frame = addr / AMM_PAGE_SIZE;
  

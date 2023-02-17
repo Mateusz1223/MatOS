@@ -2,8 +2,7 @@
 
 #include "inc/HAL.h"
 
-static struct VGAStruct
-{
+static struct VGAStruct{
 	unsigned char *textram;
 
 	int width;
@@ -15,12 +14,10 @@ static struct VGAStruct
 
 //___________________________________________________________________________________________________
 
-static void clear()
-{
+static void clear(){
 	int n = VGA.height*VGA.width*2;
 	int i;
-	for(i=0; i<n; i+=2)
-	{
+	for(i=0; i<n; i+=2){
 		VGA.textram[i] = ' ';
 		VGA.textram[i+1] = LIGHT_GREEN;
 	}
@@ -30,8 +27,7 @@ static void clear()
 
 //___________________________________________________________________________________________________
 
-void VGA_init(bootinfo* bootInfo)
-{
+void VGA_init(bootinfo* bootInfo){
 	VGA.height = 25;
 	if((bootInfo->BIOS_equipment_list & 0x30)>>4 == 0x2)
 		VGA.width = 80;
@@ -45,8 +41,7 @@ void VGA_init(bootinfo* bootInfo)
 	clear();
 }
 
-void VGA_get_display_size(int *x, int *y)
-{
+void VGA_get_display_size(int *x, int *y){
 	*x = VGA.width;
 	*y = VGA.height;
 }
@@ -61,8 +56,7 @@ void VGA_copy_to_textram(int pos, void *src, int count) // ( pos -> number of st
 	memmove(dest, src, count*2); // count*2 because one character in textram consist of 2 bytes - character and color
 }
 
-void VGA_set_cursor(int x, int y, unsigned char color)
-{
+void VGA_set_cursor(int x, int y, unsigned char color){
 	uint16_t pos = y * VGA.width + x;
 	
 	outb(VGA.IO_Port_RegisterIndex, 0xf);
@@ -74,17 +68,18 @@ void VGA_set_cursor(int x, int y, unsigned char color)
 	VGA.textram[2*pos+1] = color;
 }
 
-void VGA_disable_cursor()
-{
+void VGA_disable_cursor(){
 	outb(VGA.IO_Port_RegisterIndex, 0x0A);
 	outb(VGA.IO_Port_DataRegister, 0x20);
 }
 
-void VGA_enable_cursor()
-{
+void VGA_enable_cursor(){
+	int cursor_start = 13;
+	int cursor_end = 14;
+
 	outb(VGA.IO_Port_RegisterIndex, 0x0A);
-	outb(VGA.IO_Port_DataRegister, (inb(0x3D5) & 0xC0) | 14);
+	outb(VGA.IO_Port_DataRegister, (inb(VGA.IO_Port_DataRegister) & 0xC0) | cursor_start);
  
 	outb(VGA.IO_Port_RegisterIndex, 0x0B);
-	outb(VGA.IO_Port_DataRegister, (inb(0x3E0) & 0xE0) | 17);
+	outb(VGA.IO_Port_DataRegister, (inb(VGA.IO_Port_DataRegister) & 0xE0) | cursor_end);
 }

@@ -129,8 +129,7 @@ struct ideDevice {
 
 //___________________________________________________________________________________________________
 
-void ATA_write(uint8_t channel, uint8_t reg, uint8_t data)
-{
+void ATA_write(uint8_t channel, uint8_t reg, uint8_t data){
 	// to understand this reg translation see REG info
 	if (reg > 0x07 && reg < 0x0C) 
 		ATA_write(channel, ATA_REG_CONTROL, 0x80 | channels[channel].noInt); // not sure what it does
@@ -146,8 +145,7 @@ void ATA_write(uint8_t channel, uint8_t reg, uint8_t data)
 		ATA_write(channel, ATA_REG_CONTROL, channels[channel].noInt); // not sure what it does
 }
 
-uint8_t ATA_read(uint8_t channel, uint8_t reg)
-{
+uint8_t ATA_read(uint8_t channel, uint8_t reg){
 	// to understand this reg translation see REG info
 	uint8_t result;
 
@@ -167,8 +165,7 @@ uint8_t ATA_read(uint8_t channel, uint8_t reg)
 	return result;
 }
 
-void ATA_init()
-{
+void ATA_init(){
 	channels[ATA_PRIMARY].base = 0x1F0;
 	channels[ATA_PRIMARY].ctrlBase = 0x3F6;
 	channels[ATA_PRIMARY].busMasterIDE = 0; // ??
@@ -186,8 +183,7 @@ void ATA_init()
    	// Detect ATA-ATAPI Devices:
    	int count = -1;
    	for(int i = 0; i < 2; i++)
-    	for(int j = 0; j < 2; j++)
-    	{
+    	for(int j = 0; j < 2; j++){
     		count++;
 
     		unsigned char err = 0;
@@ -207,12 +203,10 @@ void ATA_init()
     		// Polling:
     		if (ATA_read(i, ATA_REG_STATUS) == 0) continue; // If Status = 0, No Device.
  	
-    		while(1)
-    		{
+    		while(1){
     			status = ATA_read(i, ATA_REG_STATUS);
-    			if ((status & ATA_SR_ERR)) {err = 1; break;} // If Err, Device is not ATA.
-    			if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ))
-    			{
+    			if((status & ATA_SR_ERR)) {err = 1; break;} // If Err, Device is not ATA.
+    			if(!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)){
     				type = IDE_ATA;
     				break; // Everything is right.
     			}
@@ -220,8 +214,7 @@ void ATA_init()
  
     		 // Probe for ATAPI Devices:
  
-    		if (err != 0)
-    		{
+    		if(err != 0){
     			unsigned char cl = ATA_read(i, ATA_REG_LBA1);
     			unsigned char ch = ATA_read(i, ATA_REG_LBA2);
  
@@ -239,8 +232,7 @@ void ATA_init()
     		// Read Identification Space of the Device:
     		//terminal_print(debugTerminal, "Buff:\n");
 	        int ideBuff[128];
-	        for(int k=0; k<128; k++)
-	        {
+	        for(int k=0; k<128; k++){
 	        	ideBuff[k] = ind(channels[i].base + ATA_REG_DATA);
 	        	//terminal_print(debugTerminal, "%x; ", ideBuff[k]);
 	        }
@@ -272,8 +264,7 @@ void ATA_init()
     	}
 
     	// Print summary
-    	for (int i = 0; i < 4; i++)
-    	{
+    	for(int i = 0; i < 4; i++){
     		if(i == 0)
 	    		terminal_print(debugTerminal, "Primary master:\n");
 	    	else if(i == 1)
@@ -283,25 +274,20 @@ void ATA_init()
 	    	else if(i == 3)
 	    		terminal_print(debugTerminal, "Secondary slave:\n");
 
-	    	if (ideDevices[i].exists == 1)
-	    	{
+	    	if (ideDevices[i].exists == 1){
 	    		terminal_print(debugTerminal, "\tFound %s Drive %dGB - %s\n",
 	    		 	(const char *[]){"ATA", "ATAPI"}[ideDevices[i].type],
 	    		 	ideDevices[i].size / 1024 / 1024 / 2,
 	    		 	ideDevices[i].model);
 	    	}
 	    	else
-	    	{
 	    		terminal_print(debugTerminal, "\tNo drive\n");
-	    	}
 	    }
-
 	    terminal_print(debugTerminal, "ATA drives ready!");
 	    		
 }
 
-void ATA_check()
-{
+void ATA_check(){
 	terminal_print(debugTerminal, "ATA check:\n");
 
 	outb(0x1F0 + ATA_REG_HDDEVSEL, 0xA0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
@@ -313,12 +299,9 @@ void ATA_check()
 	uint8_t tmpword = inb(0x1F0 + ATA_REG_STATUS); // read the status port
 
 	if (tmpword & 0x40) // see if the busy bit is set
-	{
 		terminal_print(debugTerminal, "Primary master exists\n");
-	}else
-	{
+	else
 		terminal_print(debugTerminal, "Primary master does not exists\n");
-	}
 
 	outb(0x1F0 + ATA_REG_HDDEVSEL, (0xA0) | (1 << 4)); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -329,15 +312,9 @@ void ATA_check()
 	tmpword = inb(0x1F0 + ATA_REG_STATUS); // read the status port
 
 	if (tmpword & 0x40) // see if the busy bit is set
-	{
 		terminal_print(debugTerminal, "Primary slave exists\n");
-	}else
-	{
+	else
 		terminal_print(debugTerminal, "Primary slave does not exists\n");
-	}
-
-
-
 
 	outb(0x170 + ATA_REG_HDDEVSEL, 0xA0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -348,12 +325,9 @@ void ATA_check()
 	// what about identify command ??
 
 	if (tmpword & 0x40) // see if the busy bit is set
-	{
 		terminal_print(debugTerminal, "Secondary master exists\n");
-	}else
-	{
+	else
 		terminal_print(debugTerminal, "Secondary master does not exists\n");
-	}
 
 	outb(0x170 + ATA_REG_HDDEVSEL, (0xA0) | (1 << 4)); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -364,10 +338,7 @@ void ATA_check()
 	tmpword = inb(0x170 + ATA_REG_STATUS); // read the status port
 
 	if (tmpword & 0x40) // see if the busy bit is set
-	{
 		terminal_print(debugTerminal, "Secondary slave exists\n");
-	}else
-	{
+	else
 		terminal_print(debugTerminal, "Secondary slave does not exists\n\n");
-	}
 }

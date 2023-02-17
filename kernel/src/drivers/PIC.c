@@ -26,15 +26,13 @@
 
 //_____________________________________________________________________
 
-static uint16_t pic_get_irq_reg(int ocw3)
-{
+static uint16_t pic_get_irq_reg(int ocw3){
 	outb(PIC1_COMMAND, ocw3);
 	outb(PIC2_COMMAND, ocw3);
 	return (inb(PIC1_COMMAND) << 8) | inb(PIC2_COMMAND);
 }
 
-static void PIC_remap(int offset1, int offset2)
-{ 
+static void PIC_remap(int offset1, int offset2){ 
 	uint8_t mask1 = inb(PIC1_DATA);
 	uint8_t mask2 = inb(PIC2_DATA);
 	
@@ -64,8 +62,7 @@ static void PIC_remap(int offset1, int offset2)
 
 //_______________________________________________________________________
 
-void PIC_init()
-{
+void PIC_init(){
 	PIC_remap(0x20, 0x28);
 
 	for(int i=0; i<=15; i++) // Mask PIC interrupts
@@ -76,21 +73,18 @@ void PIC_init()
 	terminal_print(debugTerminal, "PIC ready!\n");
 }
 
-void PIC_sendEOI(uint8_t irq)
-{
+void PIC_sendEOI(uint8_t irq){
 	if(irq >= 8)
 		outb(PIC2_COMMAND, PIC_EOI);
 	
 	outb(PIC1_COMMAND, PIC_EOI);
 }
 
-void IRQ_set_mask(uint8_t IRQline)
-{
+void IRQ_set_mask(uint8_t IRQline){
 	uint16_t port;
 	uint8_t value;
 	
-	if(IRQline >=8)
-	{
+	if(IRQline >=8){
 		port = PIC2_DATA;
 		IRQline -=8;
 	}
@@ -101,13 +95,11 @@ void IRQ_set_mask(uint8_t IRQline)
 	outb(port, value);
 }
 
-void IRQ_clear_mask(uint8_t IRQline)
-{
+void IRQ_clear_mask(uint8_t IRQline){
 	uint16_t port;
 	uint8_t value;
 	
-	if(IRQline >= 8)
-	{
+	if(IRQline >= 8){
 		port = PIC2_DATA;
 		IRQline -=8;
 	}
@@ -118,23 +110,19 @@ void IRQ_clear_mask(uint8_t IRQline)
 	outb(port, value);
 }
 
-uint16_t pic_get_irr(void)
-{
+uint16_t pic_get_irr(void){
 	return pic_get_irq_reg(PIC_READ_IRR);
 }
 
-uint16_t pic_get_isr(void)
-{
+uint16_t pic_get_isr(void){
 	return pic_get_irq_reg(PIC_READ_ISR);
 }
 
-void PIC_handler(int irq_num)
-{
+void PIC_handler(int irq_num){
 	disable_interrupts();
 	//terminal_print(debugTerminal, "IRQ num: %d\n", irq_num);
 
-	switch( irq_num )
-	{
+	switch( irq_num ){
 	case 0:
 		PIT_irq();
 		break;
