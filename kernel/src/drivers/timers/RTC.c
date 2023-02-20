@@ -114,7 +114,7 @@ void RTC_init()
 	io_wait();
 	inb(0x71);		// just throw away contents
 
-	terminal_print(debugTerminal, "RTC ready, time: %d:%d:%d\n", RTC.hour, RTC.minute, RTC.second);
+	terminal_print(debugTerminal, "[X] RTC ready, time: %d:%d:%d\n", RTC.hour, RTC.minute, RTC.second);
 }
 
 void RTC_get_time(int *h, int *m, int *s)

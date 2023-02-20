@@ -10,11 +10,12 @@ static struct HeapStructure{
 
 struct HeapEntry{
 	uint8_t *prev;
+	bool first;
 	size_t size; // without HeapEntry itself
 	bool free;
 }__attribute__((packed)); // make sure it's not alligned by compiler
 
-typedef struct HeapEntry HeapEntry;
+typedef struct HeapEntry HeapEntry; // ?????
 
 //_________________________________________________________________________________________
 
@@ -32,7 +33,7 @@ static void debug_print_entries(){
 		else
 			prev = (uint8_t *)(entry->prev - Heap.addr);
 		
-		terminal_print(debugTerminal, "Location: %x, prev: %x, size: %x, free: %b\n", it - Heap.addr, prev, entry->size, entry->free);
+		terminal_print(debugTerminal, "Location: %x, prev: %x, first: %b, size: %x, free: %b\n", it - Heap.addr, prev, entry->first, entry->size, entry->free);
 
 		it += sizeof(HeapEntry);
 		it += entry->size;
@@ -49,7 +50,8 @@ void heap_init(void *addr, size_t size) // size in bytes
 
 	HeapEntry *firstEntry = (HeapEntry *)addr;
 
-	firstEntry->prev = 0; // sprecial prev indicates first entry
+	firstEntry->prev = 0;
+	firstEntry->first = true;
 	firstEntry->size = size - sizeof(HeapEntry);
 	firstEntry->free = true;
 
@@ -61,17 +63,15 @@ void heap_init(void *addr, size_t size) // size in bytes
 void *heap_malloc(size_t size){
 	uint8_t *it = Heap.addr;
 
-	while(it < (uint8_t *)(Heap.addr + Heap.size))
-	{
+	while(it < (uint8_t *)(Heap.addr + Heap.size)){
 		HeapEntry *entry = (HeapEntry *)it;
-		if(entry->free && entry->size >= size)
-		{
+		if(entry->free && entry->size >= size){
 			entry->free = false;
 
-			if(entry->size - size > sizeof(HeapEntry))
-			{
+			if(entry->size - size > sizeof(HeapEntry)){
 				HeapEntry *newEntry = (HeapEntry *)(it + sizeof(HeapEntry) + size);
 				newEntry->prev = (uint8_t *)entry;
+				newEntry->first = false;
 				newEntry->size = entry->size - size - sizeof(HeapEntry);
 				newEntry->free = true;
 
@@ -85,10 +85,8 @@ void *heap_malloc(size_t size){
 			//debug_print_entries();
 
 			return (void *)(it + sizeof(HeapEntry));
-			
 		}
-		else // next entry
-		{
+		else{ // next entry
 			it += sizeof(HeapEntry);
 			it += entry->size;
 		}
@@ -97,32 +95,24 @@ void *heap_malloc(size_t size){
 	return 0; // Error, sufficient memory block hasn't been found
 }
 
-void heap_free(void *addr){
+void heap_free(void *addr){ // Errors to be debuged
 	uint8_t *ad = (uint8_t *)addr;
 	ad -= sizeof(HeapEntry);
 	HeapEntry *entry = (HeapEntry *)ad;
 	entry->free = true;
 
 	HeapEntry *nextEntry = (HeapEntry *)(ad + sizeof(HeapEntry) + entry->size);
-
-	if(nextEntry < (HeapEntry *)(Heap.addr + Heap.size))
-	{
-		if(nextEntry->free)
-		{
-			entry->size += sizeof(HeapEntry);
-			entry->size += nextEntry->size;
-		}
+	if(nextEntry < (HeapEntry *)(Heap.addr + Heap.size) && nextEntry->free){
+		HeapEntry *nextNextEntry = (HeapEntry *)((uint8_t *)nextEntry + sizeof(HeapEntry) + nextEntry->size);
+		entry->size = entry->size + sizeof(HeapEntry) + nextEntry->size;
+		nextNextEntry->prev = nextEntry->prev;
 	}
 
 	HeapEntry *prevEntry = (HeapEntry *)entry->prev;
-
-	if(prevEntry != 0)
-	{
-		if(prevEntry->free)
-		{
-			prevEntry->size += sizeof(HeapEntry);
-			prevEntry->size += entry->size;
-		}
+	if(!entry->first && prevEntry->free){
+		nextEntry = (HeapEntry *)(ad + sizeof(HeapEntry) + entry->size);
+		prevEntry->size = prevEntry->size + sizeof(HeapEntry) + entry->size;
+		nextEntry->prev = entry->prev;
 	}
 
 	//debug_print_entries();

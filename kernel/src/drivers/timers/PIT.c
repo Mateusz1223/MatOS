@@ -52,7 +52,7 @@ void PIT_init()
 
 	enable_PIC_irq();
 
-	terminal_print(debugTerminal, "PIT ready!\n");
+	terminal_print(debugTerminal, "[X] PIT ready!\n");
 }
 
 unsigned long long PIT_millis()

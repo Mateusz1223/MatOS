@@ -12,17 +12,21 @@
 
 #include "inc/drivers/busses/ATA.h"
 
+// DEBUG
+#include "inc/memory/heap.h"
+
 void _start(bootinfo* bootInfo){
 	VGA_init(bootInfo);
 	UI_manager_init();
 
-	idt_init();
 	memory_init(bootInfo);
+	idt_init();
 	keyboard_init();
 	RTC_init();
 	PIT_init();
 
-	//ATA_check();
+	terminal_print(debugTerminal, "\n------------------------------------\n");
+	ATA_check();
 	//ATA_init();
 
 	for(;;);

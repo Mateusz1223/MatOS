@@ -17,8 +17,11 @@ typedef struct Terminal Terminal;
 
 typedef struct Terminal
 {
-	char buffer[8010];
-	size_t buffSize;
+	int id;
+
+	char buffer[20010];
+	size_t bufferSize;
+	size_t pageSize;
 
 	int height;
 	int width;
@@ -44,7 +47,7 @@ typedef struct Terminal
 
 Terminal *debugTerminal;
 
-void terminal_init(Terminal *this, bool debugMode);
+void terminal_init(Terminal *this, int id, bool debugMode);
 
 void terminal_clear(Terminal *this);
 int terminal_print(Terminal *this, const char *str, ...); // returns 0 when print was not possible, 1 when executed properly

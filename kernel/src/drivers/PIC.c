@@ -70,7 +70,7 @@ void PIC_init(){
 
 	IRQ_clear_mask(2); // Enable Slave PIC
 
-	terminal_print(debugTerminal, "PIC ready!\n");
+	terminal_print(debugTerminal, "[X] PIC ready!\n");
 }
 
 void PIC_sendEOI(uint8_t irq){

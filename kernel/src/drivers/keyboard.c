@@ -52,7 +52,7 @@ void keyboard_init(){
 
 	enable_keyboard_irq();
 
-	terminal_print(debugTerminal, "PS/2 Keyboard ready!\n");
+	terminal_print(debugTerminal, "[X] PS/2 Keyboard ready!\n");
 }
 
 

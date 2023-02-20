@@ -73,14 +73,12 @@ static void amm_unset(int bit){
  	AMM.addr[bit / 32] &= ~ (1 << (bit % 32));
 }
 
-static void amm_set_multiple(int base, size_t count) //to be speed up
-{
+static void amm_set_multiple(int base, size_t count){ //to be speed up
  	for(int i=base; i<base+count; i++)
  		amm_set(i);
 }
 
-static void amm_unset_multiple(int base, size_t count) //to be speed up
-{
+static void amm_unset_multiple(int base, size_t count){ //to be speed up
  	for(int i=base; i<base+count; i++)
 		amm_unset(i);
 }
@@ -89,10 +87,8 @@ static bool amm_test(int bit){
  	return AMM.addr[bit / 32] &  (1 << (bit % 32));
 }
 
-static int amm_first_free() 
-{
-	uint32_t i = AMM.lastReservedBlock / 32;
-	for (i=0; i< AMM.maxBlocks / 32; i++)
+static int amm_first_free(){
+	for(uint32_t i=0; i<AMM.maxBlocks / 32; i++)
 		if (AMM.addr[i] != 0xffffffff)
 			for (int j=0; j<32; j++) {		//! test each bit in the dword
  
@@ -188,7 +184,7 @@ void memory_init(bootinfo *bootInfo){
 
 	paging_init();
 
-	terminal_print(debugTerminal, "Memory ready!\n");
+	terminal_print(debugTerminal, "[X] Memory ready!\n");
 }
 
 void *memory_alloc_block(){

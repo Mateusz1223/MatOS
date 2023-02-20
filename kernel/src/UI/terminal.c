@@ -2,6 +2,7 @@
 
 #include "inc/UI/UIManager.h"
 #include "inc/drivers/VGA.h" // just for colors
+#include "inc/memory/heap.h"
 
 //___________________________________________________________________________________________________
 
@@ -9,22 +10,20 @@ static void check_last_character_y(Terminal *this){
 	if(this->lastCharacterY >= this->displayY+this->height)
 		terminal_scroll_down(this);
 
-	if(this->lastCharacterY >= this->buffSize / this->width - 1)
-	{
-		memmove(this->buffer, &this->buffer[this->buffSize], (size_t)this->buffSize); // this->buffSize / 2 * 2, will always be even number, so won't cause problems
+	if(this->lastCharacterY >= this->bufferSize / this->width - 1){
+		memmove(this->buffer, &this->buffer[2*this->pageSize], (size_t)(2*this->bufferSize - 2*this->pageSize)); // this->bufferSize / 2 * 2, will always be even number, so won't cause problems
 
-		for(int i=this->buffSize; i<this->buffSize*2; i+=2)
-		{
+		for(int i=(2*this->bufferSize-2*this->pageSize); i<this->bufferSize*2; i+=2){
 			this->buffer[i] = ' ';
 			this->buffer[i+1] = this->color;
-		}	
+		}
 
-		this->cursorY -= this->buffSize / this->width / 2;
+		this->cursorY -= this->pageSize / this->width;
 
-		this->displayY = 15;
-		this->lastCharacterY -= this->buffSize / this->width / 2; // ?????
+		this->displayY = this->cursorY - 15;
+		this->lastCharacterY -= this->pageSize / this->width;
 
-		this->scanBuffer.pos -=  this->buffSize / 2; // ?????
+		this->scanBuffer.pos -=  this->pageSize; // ?????
 
 		this->displayUpdated = true;
 	}
@@ -146,10 +145,13 @@ void terminal_scan(Terminal *this, char *buff, size_t size){
 
 //___________________________________________________________________________________________________
 
-void terminal_init(Terminal *this, bool debugMode){
-	this->buffSize = 4000; // in the future buffer will be dynamically allocated (it will be a buffer size in bytes divided by 2)
-
+void terminal_init(Terminal *this, int id, bool debugMode){
+	this->id = id;
+	
+	this->bufferSize = 10000; // * 2 bytes (8 bits character + 8 bits color)
 	UI_manager_get_display_size(&this->width, &this->height);
+	this->pageSize = this->width*this->height;
+
 	this->cursorEnabled = true;
 	this->color = LIGHT_GREEN;
 
@@ -225,7 +227,7 @@ void terminal_clear(Terminal *this){
 	this->cursorY = 0;
 
 	// clear buffer
-	for(int i=0; i<this->buffSize*2; i+=2){
+	for(int i=0; i<this->bufferSize*2; i+=2){
 		this->buffer[i] = ' ';
 		this->buffer[i+1] = this->color;
 	}
@@ -260,7 +262,7 @@ void terminal_scroll_up(Terminal *this){
 
 void terminal_scroll_down(Terminal *this){
 	this->displayY++;
-	if(this->displayY + this->height >= this->buffSize / this->width)
+	if(this->displayY + this->height >= this->bufferSize / this->width)
 		this->displayY--;
 
 	this->displayUpdated = true;

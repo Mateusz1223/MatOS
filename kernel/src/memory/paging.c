@@ -206,7 +206,7 @@ void paging_init(){
 	// 0-4 MiB (identity mapped)
 	pTable *table1 = (pTable *)memory_alloc_block();
 	if (!table1){
-		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization failed - no space for Paging Table 1");
+		terminal_print(debugTerminal, "paging.c, paging_init(): initialization failed - no space for Paging Table 1");
 		return;
 	}
 	memsetk(table1, (uint8_t)0x00, sizeof(pTable));
@@ -214,7 +214,7 @@ void paging_init(){
 	// 4 MiB - 8MiB (identity mapped)
 	pTable *table2 = (pTable *)memory_alloc_block();
 	if (!table2){
-		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization - failed no space for Paging Table 2");
+		terminal_print(debugTerminal, "paging.c, paging_init(): initialization - failed no space for Paging Table 2");
 		return;
 	}
 	memsetk(table2, (uint8_t)0x00, sizeof(pTable));
@@ -248,7 +248,7 @@ void paging_init(){
 	// create default directory table
 	pDirectoryTable *dir = (pDirectoryTable *)memory_alloc_block(); // memory_alloc_block() returns 4096 alligned pointer
 	if (!dir){
-		terminal_print(debugTerminal, "paging.c, paging_initialize(): initialization failed no space for Paging Directory Table");
+		terminal_print(debugTerminal, "paging.c, paging_init(): initialization failed no space for Paging Directory Table");
 		return;
 	}
 	memsetk(dir, 0, sizeof(pDirectoryTable));
@@ -268,7 +268,7 @@ void paging_init(){
 	Paging.currPDirectoryTable = dir;
 	enable_paging();
 
-	terminal_print(debugTerminal, "Paging initialized and enabled!\n");
+	terminal_print(debugTerminal, "[X] Paging initialized and enabled!\n");
 }
 
 void paging_flush_tlb_entry( uint32_t addr ){

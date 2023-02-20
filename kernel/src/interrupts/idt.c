@@ -107,6 +107,6 @@ void idt_init(){
 	__asm("lidt %0" : : "m"(ptr));
 
 	enable_interrupts();
-
-	terminal_print(debugTerminal, "IDT loaded!\n");
+	
+	terminal_print(debugTerminal, "[X] IDT loaded!\n");
 }
