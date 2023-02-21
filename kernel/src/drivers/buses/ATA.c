@@ -301,7 +301,7 @@ void ATA_check(){
 	if (tmpword & 0x40) // see if the busy bit is set
 		terminal_print(debugTerminal, "Primary master exists\n");
 	else
-		terminal_print(debugTerminal, "Primary master does not exists\n");
+		terminal_print(debugTerminal, "Primary master does not exist\n");
 
 	outb(0x1F0 + ATA_REG_HDDEVSEL, (0xA0) | (1 << 4)); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -314,7 +314,7 @@ void ATA_check(){
 	if (tmpword & 0x40) // see if the busy bit is set
 		terminal_print(debugTerminal, "Primary slave exists\n");
 	else
-		terminal_print(debugTerminal, "Primary slave does not exists\n");
+		terminal_print(debugTerminal, "Primary slave does not exist\n");
 
 	outb(0x170 + ATA_REG_HDDEVSEL, 0xA0); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -327,7 +327,7 @@ void ATA_check(){
 	if (tmpword & 0x40) // see if the busy bit is set
 		terminal_print(debugTerminal, "Secondary master exists\n");
 	else
-		terminal_print(debugTerminal, "Secondary master does not exists\n");
+		terminal_print(debugTerminal, "Secondary master does not exist\n");
 
 	outb(0x170 + ATA_REG_HDDEVSEL, (0xA0) | (1 << 4)); // use 0xB0 instead of 0xA0 to test the second drive on the controller
 
@@ -340,5 +340,5 @@ void ATA_check(){
 	if (tmpword & 0x40) // see if the busy bit is set
 		terminal_print(debugTerminal, "Secondary slave exists\n");
 	else
-		terminal_print(debugTerminal, "Secondary slave does not exists\n\n");
+		terminal_print(debugTerminal, "Secondary slave does not exist\n\n");
 }

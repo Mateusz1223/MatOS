@@ -23,7 +23,7 @@ static void check_last_character_y(Terminal *this){
 		this->displayY = this->cursorY - 15;
 		this->lastCharacterY -= this->pageSize / this->width;
 
-		this->scanBuffer.pos -=  this->pageSize; // ?????
+		this->scanBuffer.pos -=  this->pageSize;
 
 		this->displayUpdated = true;
 	}
@@ -304,11 +304,9 @@ void terminal_add_char_to_scan_buffer(Terminal *this, char ch){
 	if(!this->scanInProgress)
 		return;
 
-	if(ch == '\t')
-	{
+	if(ch == '\t'){
 		for(int i=0; i<4; i++)
 			terminal_add_char_to_scan_buffer(this, ' ');
-
 		return;
 	}
 
@@ -323,13 +321,11 @@ void terminal_add_char_to_scan_buffer(Terminal *this, char ch){
 	memmove(&this->buffer[2*(cursorPos+1)], &this->buffer[2*cursorPos], (size_t)(2*(this->scanBuffer.pos + this->scanBuffer.lastCharacter - cursorPos)));
 
 	this->scanBuffer.buffer[cursorPos - this->scanBuffer.pos] = ch;
-	this->scanBuffer.buffer[cursorPos - this->scanBuffer.pos + 1] = this->color;
 	this->buffer[2*cursorPos] = ch;
 	this->buffer[2*cursorPos + 1] = this->color;
 
 	this->cursorX++;
-	if(this->cursorX >= this->width)
-	{
+	if(this->cursorX >= this->width){
 		this->cursorX -= this->width;
 		this->cursorY++;
 	}

@@ -18,8 +18,7 @@ static struct UIManagerStruct{
 
 	int terminalCount;
 	Terminal *terminals[MAX_TERMINAL_COUNT];
-	Terminal *currentTerminal;
-	int currentTerminalId;
+	int currTerminal;
 
 	char *termInputBuffers[MAX_TERMINAL_COUNT];
 	int width;
@@ -36,7 +35,7 @@ static void update_terminal_display(Terminal *term){
 						term->height * UIManager.width);
 
 	int x = term->cursorX;
-	int y = term->cursorY - UIManager.currentTerminal->displayY + UIManager.taskbarHeight;
+	int y = term->cursorY - UIManager.terminals[UIManager.currTerminal]->displayY + UIManager.taskbarHeight;
 	if(term->cursorEnabled == false || y >= UIManager.height || y < UIManager.taskbarHeight){
 		if(UIManager.cursorEnabled == true){
 			UIManager.cursorEnabled = false;
@@ -53,19 +52,32 @@ static void update_terminal_display(Terminal *term){
 	VGA_set_cursor(x, y, term->color);
 }
 
-static void UI_manager_add_terminal(){
-	UIManager.terminalCount++;
-	int i = UIManager.terminalCount-1;
-	UIManager.terminals[i] = (Terminal *)heap_malloc(sizeof(Terminal));
-	terminal_init(UIManager.terminals[i], i, false);
-	UIManager.termInputBuffers[i] = (char *)heap_malloc(MAX_INPUT_BUFFER_SIZE+5);
-	UIManager.termInputBuffers[i][0] = 0;
-	terminal_print(UIManager.terminals[i], "> ");
-	terminal_scan(UIManager.terminals[i], UIManager.termInputBuffers[i], MAX_INPUT_BUFFER_SIZE);
+static void change_current_terminal(int id){
+	UIManager.currTerminal = id;
+	UIManager.terminals[UIManager.currTerminal]->displayUpdated = true;
 
-	int firstPosition = i*6 + 2;
+	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2)
+		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
+
+	UIManager.taskBar[3+2*3*id] = GREEN;
+	UIManager.taskBar[5+2*3*id] = GREEN;
+
+	UIManager.taskbarUpdated = true;
+}
+
+static void add_terminal(){
+	UIManager.terminalCount++;
+	int id = UIManager.terminalCount-1;
+	UIManager.terminals[id] = (Terminal *)heap_malloc(sizeof(Terminal));
+	terminal_init(UIManager.terminals[id], id, false);
+	UIManager.termInputBuffers[id] = (char *)heap_malloc(MAX_INPUT_BUFFER_SIZE+5);
+	terminal_print(UIManager.terminals[id], "> ");
+	UIManager.termInputBuffers[id][0] = 0;
+	terminal_scan(UIManager.terminals[id], UIManager.termInputBuffers[id], MAX_INPUT_BUFFER_SIZE);
+
+	int firstPosition = id*6 + 2;
 	UIManager.taskBar[firstPosition] = 'F';
-	UIManager.taskBar[firstPosition+2] = (char)(i+1 + 48);
+	UIManager.taskBar[firstPosition+2] = (char)(id+1 + 48);
 	UIManager.taskBar[firstPosition+4] = '|';
 	if(UIManager.terminalCount == MAX_TERMINAL_COUNT){
 		UIManager.taskBar[firstPosition+6] = ' ';
@@ -77,11 +89,13 @@ static void UI_manager_add_terminal(){
 		UIManager.taskBar[firstPosition+12] = '|';
 	}
 
-	terminal_print(debugTerminal, "Added terminal, number of active terminals: %d\n", UIManager.terminalCount);
+	change_current_terminal(id);
+
+	//terminal_print(debugTerminal, "Added terminal, number of active terminals: %d\n", UIManager.terminalCount); // DEBUG
 }
 
-static void UI_manager_delete_terminal(int id){
-	if(id >= UIManager.terminalCount || id < 0)
+static void delete_terminal(int id){
+	if(id >= UIManager.terminalCount || id < 1)
 		return;
 	UIManager.terminalCount--;
 	heap_free(UIManager.terminals[id]);
@@ -92,8 +106,6 @@ static void UI_manager_delete_terminal(int id){
 	}
 	if(id >= UIManager.terminalCount)
 		id--;
-	UIManager.currentTerminal = UIManager.terminals[id];
-	UIManager.currentTerminalId = id;
 	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2){
 		UIManager.taskBar[i] = ' ';
 		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
@@ -109,10 +121,9 @@ static void UI_manager_delete_terminal(int id){
 	UIManager.taskBar[firstPosition+8] = '9';
 	UIManager.taskBar[firstPosition+10] = '+';
 	UIManager.taskBar[firstPosition+12] = '|';
+	change_current_terminal(id);
 
-	UIManager.currentTerminal->displayUpdated = true;
-
-	terminal_print(debugTerminal, "Deleted terminal, number of active terminals: %d\n", UIManager.terminalCount);
+	//terminal_print(debugTerminal, "Deleted terminal, number of active terminals: %d\n", UIManager.terminalCount); // DEBUG
 }
 
 //_____________________________________________________________________________
@@ -127,9 +138,7 @@ void UI_manager_init(){
 	UIManager.terminals[0] = &debugTerminalBuffer;
 	debugTerminal = UIManager.terminals[0]; // debug terminal is in terminal.h
 	terminal_init(debugTerminal, 0, true);
-
-	UIManager.currentTerminal = UIManager.terminals[0];
-	UIManager.currentTerminalId = 0;
+	UIManager.currTerminal = 0;
 
 	// task bar
 	int n = 2*UIManager.taskbarHeight*UIManager.width;
@@ -187,8 +196,8 @@ void UI_manager_init(){
 }
 
 void UI_manager_request_emergency_debug_terminal_display_update(){
-	for(int i=1; i<2*UIManager.width; i++)
-		UIManager.taskBar[i] = BACKGROUND_GREEN;
+	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2)
+		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
 	UIManager.taskBar[3] = RED;
 	UIManager.taskBar[5] = RED;
 
@@ -203,31 +212,27 @@ void UI_manager_get_display_size(int *x, int *y){
 
 void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 {
-	for(int i=1; i<UIManager.terminalCount; i++){
-		if(UIManager.terminals[i] == debugTerminal) // debug terminal don't interact with user, just prints debug info
-			continue;
-			
-		if(UIManager.terminals[i]->processInProgress)
-			continue;
-
-		if(UIManager.terminals[i]->scanInProgress == false){
-			if(strcmp(UIManager.termInputBuffers[i], "help")){
-				terminal_print(UIManager.terminals[i], " Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tclose -> to close this terminal\n\tno more features yet\n\n");
-			}
-			else if(strcmp(UIManager.termInputBuffers[i], "cls")){
-				terminal_clear(UIManager.terminals[i]);
-			}
-			else if(strcmp(UIManager.termInputBuffers[i], "close")){
-				UI_manager_delete_terminal(UIManager.currentTerminalId);
-			}
-			else{
-				terminal_set_color(UIManager.terminals[i], LIGHT_RED);
-				terminal_print(UIManager.terminals[i], " \"%s\" is an unknown command\n\n", UIManager.termInputBuffers[i]);
-				terminal_set_color(UIManager.terminals[i], LIGHT_GREEN);
-			}
-
-			terminal_print(UIManager.terminals[i], "> ");
-			terminal_scan(UIManager.terminals[i], UIManager.termInputBuffers[i], MAX_INPUT_BUFFER_SIZE);
+	if(UIManager.terminals[UIManager.currTerminal] != UIManager.terminals[0] &&!UIManager.terminals[UIManager.currTerminal]->scanInProgress && !UIManager.terminals[UIManager.currTerminal]->processInProgress){
+		bool terminal_closed = false;
+		if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "help")){
+			terminal_print(UIManager.terminals[UIManager.currTerminal], " Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tclose -> to close this terminal\n\tno more features yet\n\n");
+		}
+		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "cls")){
+			terminal_clear(UIManager.terminals[UIManager.currTerminal]);
+		}
+		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "close")){
+			delete_terminal(UIManager.currTerminal);
+			terminal_closed = true;
+		}
+		else{
+			terminal_set_color(UIManager.terminals[UIManager.currTerminal], LIGHT_RED);
+			terminal_print(UIManager.terminals[UIManager.currTerminal], " \"%s\" is an unknown command\n\n", UIManager.termInputBuffers[UIManager.currTerminal]);
+			terminal_set_color(UIManager.terminals[UIManager.currTerminal], LIGHT_GREEN);
+		}
+		if(!terminal_closed){
+			terminal_print(UIManager.terminals[UIManager.currTerminal], "> ");
+			UIManager.termInputBuffers[UIManager.currTerminal][0] = 0;
+			terminal_scan(UIManager.terminals[UIManager.currTerminal], UIManager.termInputBuffers[UIManager.currTerminal], MAX_INPUT_BUFFER_SIZE);
 		}
 	}
 
@@ -235,54 +240,44 @@ void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 	if(UIManager.taskbarUpdated)
 		VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
 	
-	if(UIManager.currentTerminal->displayUpdated){
-		update_terminal_display(UIManager.currentTerminal);
-		UIManager.currentTerminal->displayUpdated = false;
+	if(UIManager.terminals[UIManager.currTerminal]->displayUpdated){
+		update_terminal_display(UIManager.terminals[UIManager.currTerminal]);
+		UIManager.terminals[UIManager.currTerminal]->displayUpdated = false;
 	}
 }
 
 void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard_irq(), Scrolls terminal when Cursor Up or Don pressed, changes current terminal when F1/F2... pressed
 {
 	if(keyId == 73) // CURSOR UP
-		terminal_scroll_up(UIManager.currentTerminal);
+		terminal_scroll_up(UIManager.terminals[UIManager.currTerminal]);
 	else if(keyId == 74) // CURSOR DOWN
-		terminal_scroll_down(UIManager.currentTerminal);
+		terminal_scroll_down(UIManager.terminals[UIManager.currTerminal]);
 	else if(keyId == 72) // CURSOR LEFT
-		terminal_move_cursor_left(UIManager.currentTerminal);
+		terminal_move_cursor_left(UIManager.terminals[UIManager.currTerminal]);
 	else if(keyId == 75) // CURSOR RIGHT
-		terminal_move_cursor_right(UIManager.currentTerminal);
+		terminal_move_cursor_right(UIManager.terminals[UIManager.currTerminal]);
 	else if(2 <= keyId && keyId <= 6){ // F1 - > F5 because MAX_TERMINAL_COUNT = 5, switch current terminal
 		int index = keyId-2;
-		if(index < UIManager.terminalCount){
-			UIManager.currentTerminalId = index;
-			UIManager.currentTerminal = UIManager.terminals[index];
-			UIManager.currentTerminal->displayUpdated = true;
-
-			for(int i=1; i<2*UIManager.width; i+=2)
-				UIManager.taskBar[i] = BACKGROUND_GREEN;
-			UIManager.taskBar[3+2*3*index] = GREEN;
-			UIManager.taskBar[5+2*3*index] = GREEN;
-
-			UIManager.taskbarUpdated = true;
-		}
+		if(index < UIManager.terminalCount)
+			change_current_terminal(index);
 	}
 	else if(keyId == 10){ // F9, add new terminal
 		if(UIManager.terminalCount < MAX_TERMINAL_COUNT)
-			UI_manager_add_terminal();
+			add_terminal();
 	}
 
 	if(keyIdLookUpTable[keyId] == 8){
-		terminal_backspace_in_scan_buffer(UIManager.currentTerminal);
+		terminal_backspace_in_scan_buffer(UIManager.terminals[UIManager.currTerminal]);
 	}
 	else if(keyIdLookUpTable[keyId] == 127){
-		terminal_delete_in_scan_buffer(UIManager.currentTerminal);
+		terminal_delete_in_scan_buffer(UIManager.terminals[UIManager.currTerminal]);
 	}
 	else if(keyIdLookUpTable[keyId] == -1){
 		//terminal_print(debugTerminal, "\nUNDEFINED\n");
 	}
 	else if(keyIdLookUpTable[keyId] == -3){	
 		//terminal_print(debugTerminal, "\n");
-		terminal_end_scan(UIManager.currentTerminal);
+		terminal_end_scan(UIManager.terminals[UIManager.currTerminal]);
 	}
 	else if(keyIdLookUpTable[keyId] == -4){
 		;
@@ -361,7 +356,7 @@ void UI_manager_keyboard_irq_resident( int keyId ) // will be called by keyboard
 		}
 
 		//terminal_putchar(debugTerminal, keyIdLookUpTable[keyId]);
-		terminal_add_char_to_scan_buffer(UIManager.currentTerminal, ch);
+		terminal_add_char_to_scan_buffer(UIManager.terminals[UIManager.currTerminal], ch);
 	}
 }
 
