@@ -12,7 +12,7 @@
 Terminal debugTerminalBuffer;
 
 static struct UIManagerStruct{
-	unsigned char taskBar[320]; // displayed on the top of the screen
+	unsigned char taskBar[485]; // displayed on the top of the screen
 	int taskbarHeight;
 	bool taskbarUpdated;
 
@@ -57,10 +57,10 @@ static void change_current_terminal(int id){
 	UIManager.terminals[UIManager.currTerminal]->displayUpdated = true;
 
 	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2)
-		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
+		UIManager.taskBar[2*UIManager.width+i+1] = BACKGROUND_GREEN;
 
-	UIManager.taskBar[3+2*3*id] = GREEN;
-	UIManager.taskBar[5+2*3*id] = GREEN;
+	UIManager.taskBar[2*UIManager.width+3+2*3*id] = GREEN;
+	UIManager.taskBar[2*UIManager.width+5+2*3*id] = GREEN;
 
 	UIManager.taskbarUpdated = true;
 }
@@ -75,7 +75,7 @@ static void add_terminal(){
 	UIManager.termInputBuffers[id][0] = 0;
 	terminal_scan(UIManager.terminals[id], UIManager.termInputBuffers[id], MAX_INPUT_BUFFER_SIZE);
 
-	int firstPosition = id*6 + 2;
+	int firstPosition = 2*UIManager.width+id*6 + 2;
 	UIManager.taskBar[firstPosition] = 'F';
 	UIManager.taskBar[firstPosition+2] = (char)(id+1 + 48);
 	UIManager.taskBar[firstPosition+4] = '|';
@@ -107,16 +107,16 @@ static void delete_terminal(int id){
 	if(id >= UIManager.terminalCount)
 		id--;
 	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2){
-		UIManager.taskBar[i] = ' ';
-		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
+		UIManager.taskBar[2*UIManager.width+i] = ' ';
+		UIManager.taskBar[2*UIManager.width+i+1] = BACKGROUND_GREEN;
 	}
 	for(int i=0; i<UIManager.terminalCount; i++){
-		int firstPosition = i*6 + 2;
+		int firstPosition = 2*UIManager.width+i*6 + 2;
 		UIManager.taskBar[firstPosition] = 'F';
 		UIManager.taskBar[firstPosition+2] = (char)(i+1 + 48);
 		UIManager.taskBar[firstPosition+4] = '|';
 	}
-	int firstPosition = (UIManager.terminalCount-1)*6+2;
+	int firstPosition = 2*UIManager.width+(UIManager.terminalCount-1)*6+2;
 	UIManager.taskBar[firstPosition+6] = 'F';
 	UIManager.taskBar[firstPosition+8] = '9';
 	UIManager.taskBar[firstPosition+10] = '+';
@@ -133,7 +133,7 @@ void UI_manager_init(){
 
 	UIManager.terminalCount = 1;
 
-	UIManager.taskbarHeight = 2;
+	UIManager.taskbarHeight = 3;
 
 	UIManager.terminals[0] = &debugTerminalBuffer;
 	debugTerminal = UIManager.terminals[0]; // debug terminal is in terminal.h
@@ -141,47 +141,50 @@ void UI_manager_init(){
 	UIManager.currTerminal = 0;
 
 	// task bar
-	int n = 2*UIManager.taskbarHeight*UIManager.width;
-	for(int i=0; i<n; i+=2){
-		if(i >= 2*(UIManager.taskbarHeight-1)*UIManager.width)
-			UIManager.taskBar[i] = '#';
-		else
-			UIManager.taskBar[i] = ' ';
-
+	for(int i=0; i<2*UIManager.width; i+=2){
+		UIManager.taskBar[i] = '=';
 		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
-
+	}
+	for(int i=0; i<2*UIManager.width; i+=2){
+		UIManager.taskBar[2*UIManager.width+i] = ' ';
+		UIManager.taskBar[2*UIManager.width+i+1] = BACKGROUND_GREEN;
+	}
+	for(int i=0; i<2*UIManager.width; i+=2){
+		UIManager.taskBar[4*UIManager.width+i] = '=';
+		UIManager.taskBar[4*UIManager.width+i+1] = BACKGROUND_GREEN;
 	}
 
-	UIManager.taskBar[0] = '|';
-	UIManager.taskBar[(UIManager.width-1)*2] = '|';
+	int firstPosition = 2*UIManager.width;
+	UIManager.taskBar[firstPosition] = '|';
+	UIManager.taskBar[firstPosition+(UIManager.width-1)*2] = '|';
 
-	UIManager.taskBar[2] = 'F';
-	UIManager.taskBar[3] = GREEN;
-	UIManager.taskBar[4] = '1';
-	UIManager.taskBar[5] = GREEN;
-	UIManager.taskBar[6] = '|';
-	UIManager.taskBar[8] = 'F';
-	UIManager.taskBar[10] = '9';
-	UIManager.taskBar[12] = '+';
-	UIManager.taskBar[14] = '|';
+	UIManager.taskBar[firstPosition+2] = 'F';
+	UIManager.taskBar[firstPosition+3] = GREEN;
+	UIManager.taskBar[firstPosition+4] = '1';
+	UIManager.taskBar[firstPosition+5] = GREEN;
+	UIManager.taskBar[firstPosition+6] = '|';
+	UIManager.taskBar[firstPosition+8] = 'F';
+	UIManager.taskBar[firstPosition+10] = '9';
+	UIManager.taskBar[firstPosition+12] = '+';
+	UIManager.taskBar[firstPosition+14] = '|';
 
 
-	int firstPosition = UIManager.width; // UIManager.width / 2 * 2
-	UIManager.taskBar[firstPosition-1] = BACKGROUND_CYAN;
+	firstPosition = 3*UIManager.width; // UIManager.width / 2 * 2
+	UIManager.taskBar[firstPosition-1] = BACKGROUND_GREEN | BROWN;
 	UIManager.taskBar[firstPosition] = 'M';
-	UIManager.taskBar[firstPosition+1] = BACKGROUND_CYAN;
+	UIManager.taskBar[firstPosition+1] = BACKGROUND_GREEN | BROWN;
 	UIManager.taskBar[firstPosition+2] = 'a';
-	UIManager.taskBar[firstPosition+3] = BACKGROUND_CYAN;
+	UIManager.taskBar[firstPosition+3] = BACKGROUND_GREEN | BROWN;
 	UIManager.taskBar[firstPosition+4] = 't';
-	UIManager.taskBar[firstPosition+5] = BACKGROUND_CYAN;
+	UIManager.taskBar[firstPosition+5] = BACKGROUND_GREEN | BROWN;
 	UIManager.taskBar[firstPosition+6] = 'O';
-	UIManager.taskBar[firstPosition+7] = BACKGROUND_CYAN;
+	UIManager.taskBar[firstPosition+7] = BACKGROUND_GREEN | BROWN;
 	UIManager.taskBar[firstPosition+8] = 'S';
-	UIManager.taskBar[firstPosition+9] = BACKGROUND_CYAN;
-	UIManager.taskBar[firstPosition+11] = BACKGROUND_CYAN;
+	UIManager.taskBar[firstPosition+9] = BACKGROUND_GREEN | BROWN;
+	UIManager.taskBar[firstPosition+11] = BACKGROUND_GREEN | BROWN;
 
 	// Time display
-	firstPosition = UIManager.width * 2 - 14;
+	firstPosition = 4*UIManager.width - 14;
 	UIManager.taskBar[firstPosition] = '-';
 	UIManager.taskBar[firstPosition+2] = '-';
 	UIManager.taskBar[firstPosition+4] = ':';
@@ -197,7 +200,7 @@ void UI_manager_init(){
 
 void UI_manager_request_emergency_debug_terminal_display_update(){
 	for(int i=2; i<2*(3*MAX_TERMINAL_COUNT + 5); i+=2)
-		UIManager.taskBar[i+1] = BACKGROUND_GREEN;
+		UIManager.taskBar[2*UIManager.width+i+1] = BACKGROUND_GREEN;
 	UIManager.taskBar[3] = RED;
 	UIManager.taskBar[5] = RED;
 
@@ -364,7 +367,7 @@ void UI_manager_RTC_irq_resident(int h, int m) // will be called by RTC_irq(), u
 {
 
 
-	int firstPosition = UIManager.width * 2 - 14;
+	int firstPosition = 4*UIManager.width - 14;
 
 	if(h < 10){
 		UIManager.taskBar[firstPosition] = '0';
