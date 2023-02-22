@@ -1,10 +1,11 @@
 #include "inc/common.h"
 
 #include "inc/UI/terminal.h"
-
 #include "inc/drivers/VGA.h"
+
 #include "inc/drivers/keyboard.h"
 #include "inc/memory/heap.h"
+#include "inc/drivers/system.h"
 
 #define MAX_TERMINAL_COUNT 5
 #define MAX_INPUT_BUFFER_SIZE 500
@@ -218,10 +219,14 @@ void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 	if(UIManager.terminals[UIManager.currTerminal] != UIManager.terminals[0] &&!UIManager.terminals[UIManager.currTerminal]->scanInProgress && !UIManager.terminals[UIManager.currTerminal]->processInProgress){
 		bool terminal_closed = false;
 		if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "help")){
-			terminal_print(UIManager.terminals[UIManager.currTerminal], " Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tclose -> to close this terminal\n\tno more features yet\n\n");
+			terminal_print(UIManager.terminals[UIManager.currTerminal],
+				"Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tsys -> to show system informations\n\tclose -> to close this terminal\n\tno more features yet\n\n");
 		}
 		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "cls")){
 			terminal_clear(UIManager.terminals[UIManager.currTerminal]);
+		}
+		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "sys")){
+			system_print_informations(UIManager.terminals[UIManager.currTerminal]);
 		}
 		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "close")){
 			delete_terminal(UIManager.currTerminal);

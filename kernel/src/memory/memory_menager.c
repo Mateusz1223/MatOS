@@ -46,6 +46,7 @@ typedef struct MemoryMapEntry MemoryMapEntry;
 struct MemoryMap{
 	int length;
 	MemoryMapEntry *map;
+	int freeMemory;
 } __attribute__((packed)) MemoryMap;
 
 struct AMMStruct {
@@ -102,6 +103,8 @@ static int amm_first_free(){
 
 static void init_regions(){
 	for(int i=0; i<MemoryMap.length; i++){
+		if(MemoryMap.map[i].type==1)
+			MemoryMap.freeMemory += MemoryMap.map[i].length;
 		if(MemoryMap.map[i].type==1 && MemoryMap.map[i].baseAddress>0x000FFFFF){ // make sure it is free for use section and it is not section 0 - 0x9f000 (reserved for stack)
 			int base = MemoryMap.map[i].baseAddress/AMM_PAGE_SIZE;
 			if(MemoryMap.map[i].baseAddress%AMM_PAGE_SIZE != 0)
@@ -127,7 +130,7 @@ static void reserve_multiple(int addr, size_t size){
 static void print_memory_map_entry(MemoryMapEntry *map_entry){
 	terminal_print(debugTerminal, "%x | ", map_entry->baseAddress);
 	terminal_print(debugTerminal, "%x | ", map_entry->length);
-	terminal_print(debugTerminal, "%x\n", map_entry->type);
+	terminal_print(debugTerminal, "%x (%s)\n", map_entry->type, (char *[]){"unknown", "free memory", "reserved memory", "other"}[map_entry->type]);
 
 	//terminal_print(debugTerminal, "%x | %x | %x\n\n",map_entry->baseAddress, map_entry->length, map_entry->type); //doesn't work to be fixed
 }
@@ -166,7 +169,9 @@ void memory_init(bootinfo *bootInfo){
 
 	AMM.usedBlocks = AMM.maxBlocks;
 
+	MemoryMap.freeMemory = 0;
 	init_regions();
+	terminal_print(debugTerminal, "Available memory: %dMB\n", MemoryMap.freeMemory/1024/1024);
 
 	reserve_multiple(0x100000, AMM_SIZE); // Allocate AMM
 	reserve_multiple(0x100000 + AMM_SIZE, 0x400000 - 0x100000 - AMM_SIZE); // Allocate Heap
@@ -213,4 +218,8 @@ void memory_free_block(void* p){
 	amm_unset(frame);
 
 	AMM.usedBlocks--;
+}
+
+int memory_get_available(){ // returns available memory in bytes
+	return MemoryMap.freeMemory;
 }

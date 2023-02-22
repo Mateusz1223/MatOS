@@ -6,30 +6,28 @@
 #include "inc/memory/memory_menager.h"
 #include "inc/drivers/timers/RTC.h"
 #include "inc/drivers/timers/PIT.h"
+#include "inc/drivers/system.h"
 
 #include "inc/UI/UIManager.h"
 #include "inc/UI/terminal.h"
 
 #include "inc/drivers/busses/ATA.h"
 
-// DEBUG
-#include "inc/memory/heap.h"
-
 void print_welcome_sign();
 
 void _start(bootinfo* bootInfo){
 	VGA_init(bootInfo);
 	UI_manager_init();
-
 	memory_init(bootInfo);
 	idt_init();
 	keyboard_init();
 	RTC_init();
 	PIT_init();
+	
+	//ATA_check();
+	//ATA_init(0x1F0, 0x3F6, 0x170, 0x376, 0x000);
 
-	terminal_print(debugTerminal, "\n------------------------------------\n");
-	ATA_check();
-	//ATA_init();
+	system_init();
 
 	print_welcome_sign();
 
@@ -38,7 +36,7 @@ void _start(bootinfo* bootInfo){
 
 void print_welcome_sign(){
 	terminal_set_color(debugTerminal, BRIGHT_WHITE);;
-	terminal_print(debugTerminal, "\n           Welcome to\n\n");
+	terminal_print(debugTerminal, "\n\n           Welcome to\n\n");
 	terminal_set_color(debugTerminal, BROWN);
 	terminal_print(debugTerminal, "           MMMM      MMMM           tt      OOOOO     SSSSSSS   !!!\n");
 	terminal_print(debugTerminal, "           MM MM    MM MM           tt    OO     OO  SS      S  !!!\n");

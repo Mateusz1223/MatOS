@@ -62,7 +62,7 @@ mov ecx, eax
 mov dword [boot_info+bootinfo.kernel_base], edx
 mov dword [boot_info+bootinfo.kernel_img_size], edi
 
-sti
+;sti ;used to crash system (sti is now called by kernel in idt_init)
 
 lea ebx, [boot_info]
 push ebx

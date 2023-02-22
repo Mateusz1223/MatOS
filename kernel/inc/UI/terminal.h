@@ -2,8 +2,7 @@
 
 #include "inc/common.h"
 
-typedef struct ScanBuffer
-{
+typedef struct ScanBuffer{
 	char *buffer; // max 500 characters
 	size_t size;
 
@@ -15,8 +14,7 @@ typedef struct ScanBuffer
 
 typedef struct Terminal Terminal;
 
-typedef struct Terminal
-{
+typedef struct Terminal{
 	int id;
 
 	char buffer[20010];
