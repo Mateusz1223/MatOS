@@ -23,7 +23,6 @@ void _start(bootinfo* bootInfo){
 	keyboard_init();
 	RTC_init();
 	PIT_init();
-	
 	ATA_init();
 
 	system_init();
