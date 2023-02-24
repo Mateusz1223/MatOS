@@ -24,9 +24,25 @@ uint32_t ind(uint16_t port){
 	__asm("in eax, dx" : : "d" (port));
 }
 
+void insb(uint16_t port, uint8_t *buffer, int n){
+    for(int i=0; i<n; i++){
+    	buffer[i] = inb(port);
+    	io_wait();
+    }
+}
+
+void insw(uint16_t port, uint16_t *buffer, int n){
+    for(int i=0; i<n; i++){
+    	buffer[i] = inw(port);
+    	io_wait();
+    }
+}
+
 void insd(uint16_t port, uint32_t *buffer, int n){
-    for(int i=0; i<n; i++)
+    for(int i=0; i<n; i++){
     	buffer[i] = ind(port);
+    	io_wait();
+    }
 }
 
 void io_wait(void){

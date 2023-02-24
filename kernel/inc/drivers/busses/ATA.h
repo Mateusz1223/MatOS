@@ -1,6 +1,15 @@
 #include "inc/HAL.h"
 
+struct ATADevice {
+   bool  exists;    // 0 (Empty) or 1 (This Drive really exists).
+   uint8_t  channel;     // 0 (Primary Channel) or 1 (Secondary Channel).
+   uint8_t  drive;       // 0 (Master Drive) or 1 (Slave Drive).
+   uint8_t type;        // 0: ATA, 1:ATAPI.
+   uint16_t signature;   // Drive Signature
+   uint16_t capabilities;// Features.
+   uint32_t   commandSets; // Command Sets Supported.
+   unsigned int   size;        // Size in Sectors.
+   char  model[41];   // Model in string.
+} ATADevices[4];
 
-void ATA_init(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, unsigned int BAR3, unsigned int BAR4);
-
-void ATA_check(); // to be deleted
+void ATA_init();
