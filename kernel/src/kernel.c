@@ -7,6 +7,7 @@
 #include "inc/drivers/timers/RTC.h"
 #include "inc/drivers/timers/PIT.h"
 #include "inc/drivers/system.h"
+#include "inc/multitasking.h"
 
 #include "inc/UI/UIManager.h"
 #include "inc/UI/terminal.h"
@@ -24,8 +25,8 @@ void _start(bootinfo* bootInfo){
 	RTC_init();
 	PIT_init();
 	ATA_init();
-
 	system_init();
+	multitasking_init();
 
 	print_welcome_sign();
 

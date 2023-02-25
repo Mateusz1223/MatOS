@@ -95,160 +95,179 @@ struct IDEChannelRegisters {
 //___________________________________________________________________________________________________
 
 static void long_wait(){
-   for(int i=0; i<=15; i++)
-      io_wait();
+    for(int i=0; i<=15; i++)
+        io_wait();
 }
 
 static void soft_reset(uint8_t channel){
-   channels[channel].ctrlReg |= ATA_CTRL_SRST;
-   outb(channels[channel].ctrl + ATA_REG_CONTROL, channels[channel].ctrlReg);
-   long_wait();
-   channels[channel].ctrlReg &= ~(ATA_CTRL_SRST);
-   outb(channels[channel].ctrl + ATA_REG_CONTROL, channels[channel].ctrlReg);
-   long_wait();
+    channels[channel].ctrlReg |= ATA_CTRL_SRST;
+    outb(channels[channel].ctrl + ATA_REG_CONTROL, channels[channel].ctrlReg);
+    long_wait();
+    channels[channel].ctrlReg &= ~(ATA_CTRL_SRST);
+    outb(channels[channel].ctrl + ATA_REG_CONTROL, channels[channel].ctrlReg);
+    long_wait();
 }
 
 static void print_error(uint16_t code){
-   if(code == 0)
-      return;
-   terminal_set_color(debugTerminal, LIGHT_RED);
-   terminal_print(debugTerminal, "[error] code: %x", code);
-   if(code & ATA_ER_AMNF)
-      terminal_print(debugTerminal, " -> Address mark not found.\n");
-   if(code & ATA_ER_TKZNF)
-      terminal_print(debugTerminal, " -> Track zero not found.\n");
-   if(code & ATA_ER_ABRT)
-      terminal_print(debugTerminal, " -> Aborted command.\n");
-   if(code & ATA_ER_MCR)
-      terminal_print(debugTerminal, " -> Media change request.\n");
-   if(code & ATA_ER_IDNF)
-      terminal_print(debugTerminal, " -> ID not found.\n");
-   if(code & ATA_ER_MC)
-      terminal_print(debugTerminal, " -> Media changed.\n");
-   if(code & ATA_ER_UNC)
-      terminal_print(debugTerminal, " -> Uncorrectable data error.\n");
-   if(code & ATA_ER_BBK)
-      terminal_print(debugTerminal, " -> Bad Block detected.\n");
-   terminal_set_color(debugTerminal, LIGHT_GREEN);
+    if(code == 0)
+        return;
+    terminal_set_color(debugTerminal, LIGHT_RED);
+    terminal_print(debugTerminal, "[error] code: %x", code);
+    if(code & ATA_ER_AMNF)
+        terminal_print(debugTerminal, " -> Address mark not found.\n");
+    if(code & ATA_ER_TKZNF)
+        terminal_print(debugTerminal, " -> Track zero not found.\n");
+    if(code & ATA_ER_ABRT)
+        terminal_print(debugTerminal, " -> Aborted command.\n");
+    if(code & ATA_ER_MCR)
+        terminal_print(debugTerminal, " -> Media change request.\n");
+    if(code & ATA_ER_IDNF)
+        terminal_print(debugTerminal, " -> ID not found.\n");
+    if(code & ATA_ER_MC)
+        terminal_print(debugTerminal, " -> Media changed.\n");
+    if(code & ATA_ER_UNC)
+        terminal_print(debugTerminal, " -> Uncorrectable data error.\n");
+    if(code & ATA_ER_BBK)
+        terminal_print(debugTerminal, " -> Bad Block detected.\n");
+    terminal_set_color(debugTerminal, LIGHT_GREEN);
 }
 
 //___________________________________________________________________________________________________
 
 void ATA_init(){
-   terminal_print(debugTerminal, "Initializing ATA...\n");
-   channels[0].base = 0x1F0;
-   channels[0].ctrl = 0x3F6;
-   channels[0].ctrlReg = ATA_CTRL_nIEN;
-   channels[1].base = 0x170;
-   channels[1].ctrl = 0x376;
-   channels[0].ctrlReg = ATA_CTRL_nIEN;
+    terminal_print(debugTerminal, "Initializing ATA...\n");
+    channels[0].base = 0x1F0;
+    channels[0].ctrl = 0x3F6;
+    channels[0].ctrlReg = ATA_CTRL_nIEN;
+    channels[1].base = 0x170;
+    channels[1].ctrl = 0x376;
+    channels[0].ctrlReg = ATA_CTRL_nIEN;
 
-   int id = 0;
-   for(int ch=0; ch<2; ch++){
-      for(int dr=0; dr<2; dr++){
-         ATADevices[id].exists = false;
-         ATADevices[id].channel = ch;
-         ATADevices[id].drive = dr;
-         id++;
-      }
-   }
-   for(int id=0; id<4; id++){
-      int ch = ATADevices[id].channel;
-      int dr = ATADevices[id].drive;
-      // https://wiki.osdev.org/ATA_PIO_Mode#IDENTIFY_command
-      outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t []){0xA0, 0xB0}[dr]);
-      io_wait();
-      outb(channels[ch].base + ATA_REG_LBAlo, 0);
-      io_wait();
-      outb(channels[ch].base + ATA_REG_LBAmid, 0);
-      io_wait();
-      outb(channels[ch].base + ATA_REG_LBAhi, 0);
-      io_wait();
-      outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_IDENTIFY));
-      long_wait();
-      uint8_t status = inb(channels[ch].base + ATA_REG_STATUS);
-      if(status == 0x00 || status == 0x6C || status == 0xEC){ // 0x00 for emulators, 0x6c for machines with resistors attached to BSY bit and 0xEC for machines without the resistor
-         terminal_print(debugTerminal, "Drive %d doesn't exist\n", id);
-         continue;
-      }
-      terminal_print(debugTerminal, "Drive %d seems to exist\n", id);
-      uint8_t type = IDE_ATA;
+    int id = 0;
+    for(int ch=0; ch<2; ch++){
+        for(int dr=0; dr<2; dr++){
+            ATADevices[id].exists = false;
+            ATADevices[id].channel = ch;
+            ATADevices[id].drive = dr;
+            id++;
+        }
+    }
+    for(int id=0; id<4; id++){
+        int ch = ATADevices[id].channel;
+        int dr = ATADevices[id].drive;
 
-      // Polling
-      uint8_t error = 0;
-      status = 0;
-      while((status & ATA_SR_BSY) || !(status & ATA_SR_DRQ)) {
-         status = inb(channels[ch].base + ATA_REG_STATUS);
-         if(status & ATA_SR_ERR){ // If Err, Device is not ATA.
-            error = inb(channels[ch].base + ATA_REG_ERROR);
-            break;
-         }
-      }
-      if(error){
-         print_error(error);
-         uint8_t LBAmid = inb(channels[ch].base + ATA_REG_LBAmid);
-         uint8_t LBAhi = inb(channels[ch].base + ATA_REG_LBAhi);
-         if (LBAmid == 0x14 && LBAhi == 0xEB)
-            type = IDE_ATAPI;
-         else if (LBAmid == 0x69 && LBAhi == 0x96)
-            type = IDE_ATAPI;
-         else{
-            terminal_print(debugTerminal, "\t-> unknown type of a device. Running soft reset on the channel and skipping device\n", id);
-            soft_reset(ch);
-            continue; // Unknown Type (may not be a device).
-         }
-         terminal_print(debugTerminal, "\t-> it's ATAPI device\n", id);
-         outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_IDENTIFY_PACKET));
-         long_wait();
-         error = 0, status = 0xff;
-         while(status & ATA_SR_BSY)
+        uint8_t status = 0xff;
+        int count = 0;
+        while((status & ATA_SR_BSY) && count < 500){
             status = inb(channels[ch].base + ATA_REG_STATUS);
-         while(!(status & ATA_SR_DRQ)){
-            status = inb(channels[ch].base + ATA_REG_STATUS);
-            if(status & ATA_SR_ERR){  
-               error = inb(channels[ch].base + ATA_REG_ERROR);
-               if(error != ATA_ER_ABRT)
-                  break;
-            }
-         }
-         if(error){
-            print_error(error);
-            terminal_print(debugTerminal, "\t-> unexpected error. Running soft reset on the channel and skipping device\n", id);
-            soft_reset(ch);
+            count++;
+        }
+        if(count >= 500){
+            terminal_print(debugTerminal, "Drive %d doesn't exist (1)\n", id);
             continue;
-         }
-      }
-      
-      // Reading data
-      char data_buffer[512];
-      insw(channels[ch].base + ATA_REG_DATA, (uint16_t *)data_buffer, 256);
-      ATADevices[id].exists = true;
-      ATADevices[id].type = type;
-      ATADevices[id].signature = *((uint16_t *)(data_buffer + ATA_IDENT_DEVICETYPE));
-      ATADevices[id].capabilities = *((uint16_t *)(data_buffer + ATA_IDENT_CAPABILITIES));
-      ATADevices[id].commandSets = *((uint32_t *)(data_buffer + ATA_IDENT_COMMANDSETS));
+        }
+        if((status & ATA_SR_IDX) || (status & ATA_SR_CORR)){ // Those bits should always be zero
+            terminal_print(debugTerminal, "Drive %d doesn't exist (2)\n", id);
+            continue;
+        }
 
-      if(ATADevices[id].commandSets & (1 << 26)) // Device uses 48-Bit Addressing
-         ATADevices[id].size = *((int *)(data_buffer + ATA_IDENT_MAX_LBA_EXT));
-      else // Device uses CHS or 28-bit Addressing
-         ATADevices[id].size = *((int *)(data_buffer + ATA_IDENT_MAX_LBA));
+        // https://wiki.osdev.org/ATA_PIO_Mode#IDENTIFY_command
+        outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t []){0xA0, 0xB0}[dr]);
+        io_wait();
+        outb(channels[ch].base + ATA_REG_LBAlo, 0);
+        io_wait();
+        outb(channels[ch].base + ATA_REG_LBAmid, 0);
+        io_wait();
+        outb(channels[ch].base + ATA_REG_LBAhi, 0);
+        io_wait();
+        outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_IDENTIFY));
+        long_wait();
+        status = inb(channels[ch].base + ATA_REG_STATUS);
+        if(status == 0x00 || status == 0x6C || status == 0xEC){ // 0x00 for emulators, 0x6c for machines with resistors attached to BSY bit and 0xEC for machines without the resistor
+            terminal_print(debugTerminal, "Drive %d doesn't exist (3)\n", id);
+            continue;
+        }
+        terminal_print(debugTerminal, "Drive %d seems to exist\n", id);
+        uint8_t type = IDE_ATA;
 
-      for(int k=0; k<40; k+=2){
-         ATADevices[id].model[k] = data_buffer[ATA_IDENT_MODEL + k + 1];
-         ATADevices[id].model[k + 1] = data_buffer[ATA_IDENT_MODEL + k];
-      }
-      int end = 40;
-      for(int i=39; i>=0; i--)
-         if(ATADevices[id].model[i] > 32){ // Not a white character
-            end = i+1;
-            break;
-         }
-      ATADevices[id].model[end] = 0; // Terminate string
+        // Polling
+        uint8_t error = 0;
+        status = 0xff;
+        while(status & ATA_SR_BSY)
+            status = inb(channels[ch].base + ATA_REG_STATUS);
+        while(!(status & ATA_SR_DRQ)) {
+            status = inb(channels[ch].base + ATA_REG_STATUS);
+            if(status & ATA_SR_ERR){ // If Err, Device is not ATA.
+                error = inb(channels[ch].base + ATA_REG_ERROR);
+                break;
+            }
+        }
+        if(error){
+            print_error(error);
+            uint8_t LBAmid = inb(channels[ch].base + ATA_REG_LBAmid);
+            uint8_t LBAhi = inb(channels[ch].base + ATA_REG_LBAhi);
+            if (LBAmid == 0x14 && LBAhi == 0xEB)
+                type = IDE_ATAPI;
+            else if (LBAmid == 0x69 && LBAhi == 0x96)
+                type = IDE_ATAPI;
+            else{
+                terminal_print(debugTerminal, "\t-> unknown type of a device. Running soft reset on the channel and skipping device\n", id);
+                soft_reset(ch);
+                continue; // Unknown Type (may not be a device).
+            }
+            terminal_print(debugTerminal, "\t-> it's ATAPI device\n", id);
+            outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_IDENTIFY_PACKET));
+            long_wait();
+            error = 0, status = 0xff;
+            while(status & ATA_SR_BSY)
+                status = inb(channels[ch].base + ATA_REG_STATUS);
+            while(!(status & ATA_SR_DRQ)){
+                status = inb(channels[ch].base + ATA_REG_STATUS);
+                if(status & ATA_SR_ERR){  
+                    error = inb(channels[ch].base + ATA_REG_ERROR);
+                    if(error != ATA_ER_ABRT)
+                        break;
+                }
+            }
+            if(error){
+                print_error(error);
+                terminal_print(debugTerminal, "\t-> unexpected error. Running soft reset on the channel and skipping device\n", id);
+                soft_reset(ch);
+                continue;
+            }
+        }
+        
+        // Reading data
+        char data_buffer[512];
+        insw(channels[ch].base + ATA_REG_DATA, (uint16_t *)data_buffer, 256);
+        ATADevices[id].exists = true;
+        ATADevices[id].type = type;
+        // Undefined behaviour. I should correct it (Pointer casts mangling)
+        ATADevices[id].signature = *((uint16_t *)(data_buffer + ATA_IDENT_DEVICETYPE));
+        ATADevices[id].capabilities = *((uint16_t *)(data_buffer + ATA_IDENT_CAPABILITIES));
+        ATADevices[id].commandSets = *((uint32_t *)(data_buffer + ATA_IDENT_COMMANDSETS));
 
-      terminal_print(debugTerminal, "\t-> size: %uGB, type: %s, model: %s\n",
-         ATADevices[id].size / 1024 / 1024 / 2,
-         (char *[]){"ATA", "ATAPI"}[ATADevices[id].type],
-         ATADevices[id].model);
-   }
-   terminal_print(debugTerminal, "[X] ATA ready!\n");
+        if(ATADevices[id].commandSets & (1 << 26)) // Device uses 48-Bit Addressing
+            ATADevices[id].size = *((int *)(data_buffer + ATA_IDENT_MAX_LBA_EXT));
+        else // Device uses CHS or 28-bit Addressing
+            ATADevices[id].size = *((int *)(data_buffer + ATA_IDENT_MAX_LBA));
+
+        for(int k=0; k<40; k+=2){
+            ATADevices[id].model[k] = data_buffer[ATA_IDENT_MODEL + k + 1];
+            ATADevices[id].model[k + 1] = data_buffer[ATA_IDENT_MODEL + k];
+        }
+        int end = 40;
+        for(int i=39; i>=0; i--)
+            if(ATADevices[id].model[i] > 32){ // Not a white character
+                end = i+1;
+                break;
+            }
+        ATADevices[id].model[end] = 0; // Terminate string
+
+        terminal_print(debugTerminal, "\t-> size: %uGB, type: %s, model: %s\n",
+            ATADevices[id].size / 1024 / 1024 / 2,
+            (char *[]){"ATA", "ATAPI"}[ATADevices[id].type],
+            ATADevices[id].model);
+    }
+    terminal_print(debugTerminal, "[X] ATA ready!\n");
 }
