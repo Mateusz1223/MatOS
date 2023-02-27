@@ -202,8 +202,8 @@ void UI_manager_init(){
 void UI_manager_request_emergency_debug_terminal_display_update(){
 	for(int i=2; i<2*(3*MAX_TERMINAL_NUM + 5); i+=2)
 		UIManager.taskBar[2*UIManager.width+i+1] = BACKGROUND_GREEN;
-	UIManager.taskBar[3] = RED;
-	UIManager.taskBar[5] = RED;
+	UIManager.taskBar[2*UIManager.width+3] = RED;
+	UIManager.taskBar[2*UIManager.width+5] = RED;
 
 	VGA_copy_to_textram(0, UIManager.taskBar, UIManager.taskbarHeight*UIManager.width); // Print taskbar
 	update_terminal_display(debugTerminal);

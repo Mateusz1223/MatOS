@@ -156,8 +156,8 @@ void PIC_handler(int irq_num){
 	11	Free for peripherals / SCSI / NIC
 	12	PS2 Mouse
 	13	FPU / Coprocessor / Inter-processor
-	14	Primary ATA Hard Disk
-	15	Secondary ATA Hard Disk
+	14	Primary ATA Hard Disk channel
+	15	Secondary ATA Hard Disk channel
 	*/
 	
 	enable_interrupts();

@@ -105,7 +105,6 @@ void idt_init(){
 	//SETIDTDESCR(IDT[48], API_isr);
 	
 	__asm("lidt %0" : : "m"(ptr));
-	__asm("sti");
 
 	enable_interrupts();
 	
