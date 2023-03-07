@@ -1,5 +1,7 @@
 #include "inc/HAL.h"
 
+typedef struct ATADevice ATADevice;
+
 struct ATADevice{
     bool  exists;    // 0 (Empty) or 1 (This Drive really exists).
     uint8_t  channel;     // 0 (Primary Channel) or 1 (Secondary Channel).
@@ -13,3 +15,6 @@ struct ATADevice{
 }ATADevices[4];
 
 void ATA_init();
+
+int ATA_read_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer);
+//int ATA_write_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer);

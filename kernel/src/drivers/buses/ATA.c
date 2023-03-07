@@ -112,7 +112,7 @@ static void print_error(uint16_t code){
     if(code == 0)
         return;
     terminal_set_color(debugTerminal, LIGHT_RED);
-    terminal_print(debugTerminal, "[error] code: %x", code);
+    terminal_print(debugTerminal, "[ATA error] code: %x", code);
     if(code & ATA_ER_AMNF)
         terminal_print(debugTerminal, " -> Address mark not found.\n");
     if(code & ATA_ER_TKZNF)
@@ -131,6 +131,215 @@ static void print_error(uint16_t code){
         terminal_print(debugTerminal, " -> Bad Block detected.\n");
     terminal_set_color(debugTerminal, LIGHT_GREEN);
 }
+
+#define BSY_WAIT_MAX_COUNTER 100000
+static int wait_while_bsy(int channel){
+    int counter = 0;
+    uint8_t status = 0xff;
+    while((status & ATA_SR_BSY) && counter < BSY_WAIT_MAX_COUNTER){
+        status = inb(channels[channel].base + ATA_REG_STATUS);
+        counter++;
+    }
+    if(counter >= BSY_WAIT_MAX_COUNTER)
+        return 1; // Error code 1: Device not responding!
+    return 0;
+}
+
+static int poll_channel(int channel){
+    int ret = wait_while_bsy(channel);
+    if(ret)
+        return ret;
+    int counter = 0;
+    uint8_t error = 0;
+    uint8_t status = 0x00;
+    while(!(status & ATA_SR_DRQ) && counter < BSY_WAIT_MAX_COUNTER){
+        status = inb(channels[channel].base + ATA_REG_STATUS);
+        if(status & ATA_SR_ERR){
+            error = inb(channels[channel].base + ATA_REG_ERROR);
+            break;
+        }
+        counter++;
+    }
+    if(counter >= BSY_WAIT_MAX_COUNTER){
+        soft_reset(channel);
+        return 1; // Error code 1: Device not responding!
+    }
+    if(error){
+        print_error(error);
+        return 2; // Error code 2: Unexpected error ocured
+    }
+    return 0;
+}
+
+static int flush(int channel){
+    // Should I choose drive first ????
+    outb(channels[channel].base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
+    long_wait();
+    if(wait_while_bsy(channel)){
+        if(inb(channels[channel].base + ATA_REG_STATUS) & ATA_SR_ERR)
+            print_error(inb(channels[channel].base + ATA_REG_ERROR));
+        terminal_set_color(debugTerminal, LIGHT_RED);
+        terminal_print(debugTerminal, "[ATA Error] error occured while flushing channel %d\n", channel);
+        terminal_set_color(debugTerminal, LIGHT_GREEN);
+        return 1;
+    }
+    return 0;
+}
+
+static int flush_ext(int channel){
+    // Should I choose drive first ????
+    outb(channels[channel].base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH_EXT);
+    long_wait();
+    if(wait_while_bsy(channel)){
+        if(inb(channels[channel].base + ATA_REG_STATUS) & ATA_SR_ERR)
+            print_error(inb(channels[channel].base + ATA_REG_ERROR));
+        terminal_set_color(debugTerminal, LIGHT_RED);
+        terminal_print(debugTerminal, "[ATA Error] error occured while flushing channel %d\n", channel);
+        terminal_set_color(debugTerminal, LIGHT_GREEN);
+        return 1;
+    }
+    return 0;
+}
+
+static int ATA_read28_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    int ch = device->channel;
+    int dr = device->drive;
+
+    // https://wiki.osdev.org/ATA_PIO_Mode#28_bit_PIO
+    outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t)((uint8_t []){0xE0, 0xF0}[dr] | (uint8_t)((LBA >> 24) & 0x0F)));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_ERROR, 0); // Supposedly it's useless
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)LBA);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, (uint8_t)(LBA >> 8));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, (uint8_t)(LBA >> 16));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_READ_PIO));
+    long_wait();
+    
+    for(int i=0; i<count; i++){
+        int ret = poll_channel(ch);
+        if(ret) // Error code 1: Device not responding!, Error code 2: Unexpected error occured!
+            return ret; 
+        insw(channels[ch].base + ATA_REG_DATA, (uint16_t *)(buffer + i*512), 256);
+    }
+    long_wait();
+
+    return 0;
+}
+
+static int ATA_read48_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    int ch = device->channel;
+    int dr = device->drive;
+
+    // https://wiki.osdev.org/ATA_PIO_Mode#48_bit_PIO
+    outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t []){0x40, 0x50}[dr]);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_ERROR, 0); // Supposedly it's useless
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count >> 8)); // high sector count byte
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)(LBA >> 24));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, 0);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, 0);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count)); // low sector count byte
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)LBA);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, (uint8_t)(LBA >> 8));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, (uint8_t)(LBA >> 16));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_READ_PIO_EXT));
+    long_wait();
+    
+    for(int i=0; i<count; i++){
+        int ret = poll_channel(ch);
+        if(ret) // Error code 1: Device not responding!, Error code 2: Unexpected error occured!
+            return ret; 
+        insw(channels[ch].base + ATA_REG_DATA, (uint16_t *)(buffer + i*512), 256);
+    }
+    long_wait();
+
+    return 0;
+}
+
+/*static int ATA_write28_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    int ch = device->channel;
+    int dr = device->drive;
+
+    // https://wiki.osdev.org/ATA_PIO_Mode#28_bit_PIO
+    outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t)((uint8_t []){0xE0, 0xF0}[dr] | (uint8_t)((LBA >> 24) & 0x0F)));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_ERROR, 0); // Supposedly it's useless
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)LBA);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, (uint8_t)(LBA >> 8));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, (uint8_t)(LBA >> 16));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_WRITE_PIO));
+    long_wait();
+    
+    for(int i=0; i<count; i++){
+        int ret = poll_channel(ch);
+        if(ret) // Error code 1: Device not responding!, Error code 2: Unexpected error occured!
+            return ret; 
+        outsw(channels[ch].base + ATA_REG_DATA, (uint16_t *)(buffer + i*512), 256); // this funtion waits between out commands
+    }
+    flush(ch);
+
+    return 0;
+}
+
+static int ATA_write48_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    int ch = device->channel;
+    int dr = device->drive;
+
+    // https://wiki.osdev.org/ATA_PIO_Mode#48_bit_PIO
+    outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t []){0x40, 0x50}[dr]);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_ERROR, 0); // Supposedly it's useless
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count >> 8)); // high sector count byte
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)(LBA >> 24));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, 0);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, 0);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_SECCOUNT0, (uint8_t)(count)); // low sector count byte
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAlo, (uint8_t)LBA);
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAmid, (uint8_t)(LBA >> 8));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_LBAhi, (uint8_t)(LBA >> 16));
+    io_wait();
+    outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_WRITE_PIO_EXT));
+    long_wait();
+    
+    for(int i=0; i<count; i++){
+        int ret = poll_channel(ch);
+        if(ret) // Error code 1: Device not responding!, Error code 2: Unexpected error occured!
+            return ret; 
+        outsw(channels[ch].base + ATA_REG_DATA, (uint16_t *)(buffer + i*512), 256); // this funtion waits between out commands
+    }
+    flush_ext(ch);
+
+    return 0;
+}*/
 
 //___________________________________________________________________________________________________
 
@@ -155,22 +364,15 @@ void ATA_init(){
     for(int id=0; id<4; id++){
         int ch = ATADevices[id].channel;
         int dr = ATADevices[id].drive;
-
-        uint8_t status = 0xff;
-        int count = 0;
-        while((status & ATA_SR_BSY) && count < 500){
-            status = inb(channels[ch].base + ATA_REG_STATUS);
-            count++;
-        }
-        if(count >= 500){
+        if(wait_while_bsy(ch)){
             terminal_print(debugTerminal, "Drive %d doesn't exist (1)\n", id);
             continue;
         }
+        uint8_t status = inb(channels[ch].base + ATA_REG_STATUS);
         if((status & ATA_SR_IDX) || (status & ATA_SR_CORR)){ // Those bits should always be zero
             terminal_print(debugTerminal, "Drive %d doesn't exist (2)\n", id);
             continue;
         }
-
         // https://wiki.osdev.org/ATA_PIO_Mode#IDENTIFY_command
         outb(channels[ch].base + ATA_REG_HDDEVSEL, (uint8_t []){0xA0, 0xB0}[dr]);
         io_wait();
@@ -189,21 +391,13 @@ void ATA_init(){
         }
         terminal_print(debugTerminal, "Drive %d seems to exist\n", id);
         uint8_t type = IDE_ATA;
-
         // Polling
-        uint8_t error = 0;
-        status = 0xff;
-        while(status & ATA_SR_BSY)
-            status = inb(channels[ch].base + ATA_REG_STATUS);
-        while(!(status & ATA_SR_DRQ)) {
-            status = inb(channels[ch].base + ATA_REG_STATUS);
-            if(status & ATA_SR_ERR){ // If Err, Device is not ATA.
-                error = inb(channels[ch].base + ATA_REG_ERROR);
-                break;
-            }
+        int ret = poll_channel(ch);
+        if(ret == 1){
+            terminal_print(debugTerminal, "Drive %d is not responding, skipping the device...\n", id);
+            continue;
         }
-        if(error){
-            print_error(error);
+        else if(ret == 2){
             uint8_t LBAmid = inb(channels[ch].base + ATA_REG_LBAmid);
             uint8_t LBAhi = inb(channels[ch].base + ATA_REG_LBAhi);
             if (LBAmid == 0x14 && LBAhi == 0xEB)
@@ -211,35 +405,24 @@ void ATA_init(){
             else if (LBAmid == 0x69 && LBAhi == 0x96)
                 type = IDE_ATAPI;
             else{
-                terminal_print(debugTerminal, "\t-> unknown type of a device. Running soft reset on the channel and skipping device\n", id);
+                terminal_print(debugTerminal, "\t-> unknown type of a device. Running soft reset on the channel and skipping the device\n", id);
                 soft_reset(ch);
                 continue; // Unknown Type (may not be a device).
             }
             terminal_print(debugTerminal, "\t-> it's ATAPI device\n", id);
             outb(channels[ch].base + ATA_REG_COMMAND, (uint8_t)(ATA_CMD_IDENTIFY_PACKET));
             long_wait();
-            error = 0, status = 0xff;
-            while(status & ATA_SR_BSY)
-                status = inb(channels[ch].base + ATA_REG_STATUS);
-            while(!(status & ATA_SR_DRQ)){
-                status = inb(channels[ch].base + ATA_REG_STATUS);
-                if(status & ATA_SR_ERR){  
-                    error = inb(channels[ch].base + ATA_REG_ERROR);
-                    if(error != ATA_ER_ABRT)
-                        break;
-                }
-            }
-            if(error){
-                print_error(error);
-                terminal_print(debugTerminal, "\t-> unexpected error. Running soft reset on the channel and skipping device\n", id);
+            ret = poll_channel(ch);
+            if(ret){
+                terminal_print(debugTerminal, "\t-> unexpected error, running soft reset and skipping the device\n", id);
                 soft_reset(ch);
                 continue;
             }
         }
-        
         // Reading data
         char data_buffer[512];
         insw(channels[ch].base + ATA_REG_DATA, (uint16_t *)data_buffer, 256);
+
         ATADevices[id].exists = true;
         ATADevices[id].type = type;
         // Undefined behaviour. I should correct it (Pointer casts mangling)
@@ -271,3 +454,41 @@ void ATA_init(){
     }
     terminal_print(debugTerminal, "[X] ATA ready!\n");
 }
+
+int ATA_read_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    if(!device->exists)
+        return 3; // Error code 3: Device does not exist
+    if(wait_while_bsy(device->channel))
+        return 4; // Error code 4: Device is not responding
+    if(device->commandSets & (1 << 26)){ // Device uses 48-Bit Addressing
+        terminal_print(debugTerminal, "[DEBUG] read LBA48\n");
+        if((LBA + count > device->size) || count > 0xFFFF)
+            return 5; // Error code 5: Inapropriate LBA and count
+        return ATA_read48_pio(device, LBA, count, buffer);
+    }
+    else{
+        terminal_print(debugTerminal, "[DEBUG] read LBA28\n");
+        if((LBA + count > device->size) || LBA > 0xfffffff || count > 0xFF)
+            return 5; // Error code 5: Inapropriate LBA and count
+        return ATA_read28_pio(device, LBA, count, buffer);
+    }
+}
+
+/*int ATA_write_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+    if(!device->exists)
+        return 3; // Error code 3: Device does not exist
+    if(wait_while_bsy(device->channel))
+        return 4; // Error code 4: Device is not responding
+    if(device->commandSets & (1 << 26)){ // Device uses 48-Bit Addressing
+        terminal_print(debugTerminal, "[DEBUG] write LBA48\n");
+        if((LBA + count > device->size) || count > 0xFFFF)
+            return 5; // Error code 5: Inapropriate LBA and count
+        return ATA_write48_pio(device, LBA, count, buffer);
+    }
+    else{
+        terminal_print(debugTerminal, "[DEBUG] write LBA28\n");
+        if((LBA + count > device->size) || LBA > 0xfffffff || count > 0xFF)
+            return 5; // Error code 5: Inapropriate LBA and count
+        return ATA_write28_pio(device, LBA, count, buffer);
+    }
+}*/

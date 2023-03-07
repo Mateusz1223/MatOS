@@ -15,7 +15,7 @@ static void check_last_character_y(Terminal *this){
 
 		for(int i=(2*this->bufferSize-2*this->pageSize); i<this->bufferSize*2; i+=2){
 			this->buffer[i] = ' ';
-			this->buffer[i+1] = this->color;
+			this->buffer[i+1] = BLACK;
 		}
 
 		this->cursorY -= this->pageSize / this->width;
@@ -101,7 +101,7 @@ static void print_int(Terminal *this, int d){
 	print_uint(this, (unsigned int) d);
 }
 
-static void print_hex(Terminal *this, unsigned int d){ //Seem to be fine but used to crush system
+static void print_hex(Terminal *this, unsigned int d){ // Seem to be fine but used to crush system
 	put_text(this, "0x");
 	
 	if(d==0){

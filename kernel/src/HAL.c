@@ -45,6 +45,27 @@ void insd(uint16_t port, uint32_t *buffer, int n){
     }
 }
 
+void outsb(uint16_t port, uint8_t *buffer, int n){
+    for(int i=0; i<n; i++){
+        outb(port, buffer[i]);
+        io_wait();
+    }
+}
+
+void outsw(uint16_t port, uint16_t *buffer, int n){
+    for(int i=0; i<n; i++){
+        outw(port, buffer[i]);
+        io_wait();
+    }
+}
+
+void outsd(uint16_t port, uint32_t *buffer, int n){
+    for(int i=0; i<n; i++){
+        outd(port, buffer[i]);
+        io_wait();
+    }
+}
+
 void io_wait(void){
     __asm( "jmp 1f\n\t"
            "1:jmp 2f\n\t"

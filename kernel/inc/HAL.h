@@ -13,4 +13,8 @@ void insb(uint16_t port, uint8_t *buffer, int n); // ???? Used in ATA driver
 void insw(uint16_t port, uint16_t *buffer, int n);
 void insd(uint16_t port, uint32_t *buffer, int n);
 
+void outsb(uint16_t port, uint8_t *buffer, int n);
+void outsw(uint16_t port, uint16_t *buffer, int n);
+void outsd(uint16_t port, uint32_t *buffer, int n);
+
 void io_wait(void);
