@@ -1,5 +1,5 @@
 [bits 16]
-org 0500h
+org 7E00h
 
 jmp start
 
@@ -61,8 +61,6 @@ mov ecx, eax
 
 mov dword [boot_info+bootinfo.kernel_base], edx
 mov dword [boot_info+bootinfo.kernel_img_size], edi
-
-;sti ;used to crash system (sti is now called by kernel in idt_init)
 
 lea ebx, [boot_info]
 push ebx

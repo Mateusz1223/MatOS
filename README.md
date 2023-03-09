@@ -14,7 +14,7 @@ To compile MatOS type:
 
 Note that build.py script uses programs such as `nasm`, `strip` or `gcc`, that need to be available in the project folder or added to PATH.
 
-`build.py` will create `floppy.raw` file in `/build` folder which you can use as a floppy image on emulators or you can write it on storage device using programs such as `ImageWriter` and run it on a real hardware.
+`build.py` will create 64MB `matos.img` file in `/build` folder which you can use as a disk image on emulators or you can write it on storage device using programs such like `rufus` and run it on a real hardware.
 
 Welcome screen:
 

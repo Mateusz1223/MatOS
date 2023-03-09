@@ -1,23 +1,6 @@
 import os
 import subprocess
 
-def fix_stage1():
-	size = os.stat("build\kernel.exe").st_size
-
-	size = (size + 511) / 512
-	size = int(size)
-	
-	if size >= 255:
-		raise Exception("kernel is too large")
-	
-	with open("build\stage1", "rb+") as f:
-		d = f.read()
-		d = bytearray(d)
-		idx = d.index(b"\xb0\xcc\x90\x90")
-		d[idx+1] = size
-		f.seek(0)
-		f.write(d)
-
 def create_compile_kernel_cmd():
 	cmd = "gcc -Ikernel -std=c99 -mno-ms-bitfields -masm=intel -m32 -nostdlib -o build\kernel kernel\src\kernel.c" #For more warnings -Wall -Wextra 
 
@@ -47,29 +30,31 @@ def main():
 	for cmd in cmds_to_run:
 		print("Running:" + cmd + "\n")
 		print(str(subprocess.check_output(cmd, shell=False), 'utf-8'))
-
-	fix_stage1()
 		
-	buf = []
+	buff = bytearray(b'')
 	for fn in files_to_img:
 		with open(fn, "rb") as f:
-			d = f.read()
-			buf.append(d)
-
-			if len(d) % 512 == 0:
+			buff += bytearray(f.read())
+			if len(buff) % 512 == 0:
 				continue
-
 			padding_size = 512 - len(d) % 512				
-			buf.append("\0" * padding_size);
+			buff += bytearray(b"\0" * padding_size)
+
+	if len(buff) / 512 - 3 > 127:
+		print("Kernel is too big. Changes in stage1 of the bootloader required!")
+		exit(1)
+
+	# allign to 64MB
+	padding_size = 67108864 - len(buff)
+	buff += bytearray(b"\0" * padding_size)
 
 	try:
-		os.remove("build\\floppy.raw")
+		os.remove("build\\matos.img")
 	except:
 		print("")
 
-	with open("build\\floppy.raw", "ab") as f:
-		for b in buf:
-			f.write(b)
+	with open("build\\matos.img", "ab") as f:
+		f.write(buff)
 
 if __name__ == '__main__':
 	main()

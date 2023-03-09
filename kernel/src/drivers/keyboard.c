@@ -45,6 +45,9 @@ char getScancode(){
 // __________________________________________________________________________
 
 void keyboard_init(){
+	for(int i=0; i<76; i++)
+		Keyboard.pressedKeys[i] = false;
+	
 	Keyboard.capsLockActive = 0;
 
 	Keyboard.toIgnore = 0;

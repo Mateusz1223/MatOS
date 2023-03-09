@@ -52,27 +52,27 @@ enable_a20:
 
   ret
 
-;when kernel img was loaded at 0x20000000 instead of 0x00007e00 was 0x200000 because PhysicalAddress = Segment * 16 + Offset so 0x2000:0000 is equal to 0x20000
+; PhysicalAddress = Segment * 16 + Offset so 0x1000:0000 is equal to 0x10000
 
 load_kernel: ; ret eax = entry point , edx = ImageBase, edi = SizeOfImage
-  mov eax, [0x00007E00+0x3C];PE offset
+  mov eax, [0x00010000+0x3C];PE offset
 
   xor ecx, ecx
-  mov ecx, [0x00007E00+eax+0x50] ;SizeOfImage
+  mov ecx, [0x00010000+eax+0x50] ;SizeOfImage
   push ecx; push SizeOfImage
 
   xor ecx, ecx
-  mov cx, [0x00007E00+eax+6] ;number of section
+  mov cx, [0x00010000+eax+6] ;number of section
 
-  mov edx, [0x00007E00+eax+0x34] ;image base
+  mov edx, [0x00010000+eax+0x34] ;image base
   push edx ; push ImageBase
 
   xor ebx, ebx
-  mov bx, [0x00007E00+eax+0x14];optional Header Size
-  add ebx, 0x00007E00+0x18
+  mov bx, [0x00010000+eax+0x14];optional Header Size
+  add ebx, 0x00010000+0x18
   add ebx, eax; ebx - section table
 
-  mov eax,[0x00007E00+eax+0x28]
+  mov eax,[0x00010000+eax+0x28]
   add eax, edx ;eax - AddressOfEntryPoint
 
   .l1:
@@ -84,7 +84,7 @@ load_kernel: ; ret eax = entry point , edx = ImageBase, edi = SizeOfImage
   mov esi, [ebx+0x14];PointerToRawData
 
   add edi, edx
-  add esi, 0x00007E00
+  add esi, 0x00010000
 
   cld
   rep movsb 

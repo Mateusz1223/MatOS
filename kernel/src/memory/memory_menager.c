@@ -130,7 +130,7 @@ static void reserve_multiple(int addr, size_t size){
 static void print_memory_map_entry(MemoryMapEntry *map_entry){
 	terminal_print(debugTerminal, "%x | ", map_entry->baseAddress);
 	terminal_print(debugTerminal, "%x | ", map_entry->length);
-	terminal_print(debugTerminal, "%x (%s)\n", map_entry->type, (char *[]){"unknown", "free memory", "reserved memory", "other"}[map_entry->type]);
+	terminal_print(debugTerminal, "%x (%s)\n", map_entry->type, (char *[]){"unknown", "free memory", "reserved memory", "other", "other", "other", "other"}[map_entry->type]);
 
 	//terminal_print(debugTerminal, "%x | %x | %x\n\n",map_entry->baseAddress, map_entry->length, map_entry->type); //doesn't work to be fixed
 }

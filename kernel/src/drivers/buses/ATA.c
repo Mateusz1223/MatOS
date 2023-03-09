@@ -271,7 +271,7 @@ static int ATA_read48_pio(ATADevice *device, uint32_t LBA, unsigned int count, u
     return 0;
 }
 
-/*static int ATA_write28_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+static int ATA_write28_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
     int ch = device->channel;
     int dr = device->drive;
 
@@ -339,7 +339,7 @@ static int ATA_write48_pio(ATADevice *device, uint32_t LBA, unsigned int count, 
     flush_ext(ch);
 
     return 0;
-}*/
+}
 
 //___________________________________________________________________________________________________
 
@@ -474,7 +474,7 @@ int ATA_read_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *b
     }
 }
 
-/*int ATA_write_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
+int ATA_write_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *buffer){
     if(!device->exists)
         return 3; // Error code 3: Device does not exist
     if(wait_while_bsy(device->channel))
@@ -491,4 +491,4 @@ int ATA_read_pio(ATADevice *device, uint32_t LBA, unsigned int count, uint8_t *b
             return 5; // Error code 5: Inapropriate LBA and count
         return ATA_write28_pio(device, LBA, count, buffer);
     }
-}*/
+}
