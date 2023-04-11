@@ -2,7 +2,6 @@
 org 7C00h
 
 start:
-
 cli
 
 ; stack at 0x0007FFF0 ;0x00007E00-0x0007FFFF	480.5 KiB	RAM (guaranteed free for use)	Conventional memory
@@ -12,6 +11,24 @@ mov sp, 0xFFF0
 
 ; Print BOOTING... message
 call print_booting
+
+; enable a20
+call check_a20
+cmp ax, 1
+je a20_activated
+call enable_a20_1 ; int 15
+
+call check_a20
+cmp ax, 1
+je a20_activated
+call enable_a20_2 ; keyboard controller
+
+call check_a20
+cmp ax, 1
+je a20_activated
+call enable_a20_3 ; fast a20
+
+a20_activated:
 
 ;http://www.ctyme.com/intr/rb-0607.html
 ;reading stage2 (in CHS mode)
@@ -53,6 +70,138 @@ int 10h
 cli
 
 jmp dword 0x0000:0x7E00 ;jump stage2
+
+; Function: check_a20
+;
+; Purpose: to check the status of the a20 line in a completely self-contained state-preserving way.
+;          The function can be modified as necessary by removing push's at the beginning and their
+;          respective pop's at the end if complete self-containment is not required.
+;
+; Returns: 0 in ax if the a20 line is disabled (memory wraps around)
+;          1 in ax if the a20 line is enabled (memory does not wrap around)
+check_a20:
+  pushf
+  push ds
+  push es
+  push di
+  push si
+ 
+  cli
+ 
+  xor ax, ax ; ax = 0
+  mov es, ax
+ 
+  not ax ; ax = 0xFFFF
+  mov ds, ax
+ 
+  mov di, 0x0500
+  mov si, 0x0510
+ 
+  mov al, byte [es:di]
+  push ax
+ 
+  mov al, byte [ds:si]
+  push ax
+ 
+  mov byte [es:di], 0x00
+  mov byte [ds:si], 0xFF
+ 
+  cmp byte [es:di], 0xFF
+ 
+  pop ax
+  mov byte [ds:si], al
+ 
+  pop ax
+  mov byte [es:di], al
+ 
+  mov ax, 0
+  je check_a20__exit
+ 
+  mov ax, 1
+ 
+  check_a20__exit:
+  pop si
+  pop di
+  pop es
+  pop ds
+  popf
+ 
+  ret
+
+enable_a20_1:
+  mov     ax,2403h                ;--- A20-Gate Support ---
+  int     15h
+  jb      enable_a20_1_exit                  ;INT 15h is not supported
+  cmp     ah,0
+  jnz     enable_a20_1_exit                  ;INT 15h is not supported
+   
+  mov     ax,2402h                ;--- A20-Gate Status ---
+  int     15h
+  jb      enable_a20_1_exit              ;couldn't get status
+  cmp     ah,0
+  jnz     enable_a20_1_exit              ;couldn't get status
+   
+  cmp     al,1
+  jz      enable_a20_1_exit           ;A20 is already activated
+   
+  mov     ax,2401h                ;--- A20-Gate Activate ---
+  int     15h
+  jb      enable_a20_1_exit              ;couldn't activate the gate
+  cmp     ah,0
+  jnz     enable_a20_1_exit              ;couldn't activate the gate
+   
+  enable_a20_1_exit:
+  
+  ret
+	
+enable_a20_2:
+ call    a20wait
+ mov     al,0xAD
+ out     0x64,al
+
+ call    a20wait
+ mov     al,0xD0
+ out     0x64,al
+
+ call    a20wait2
+ in      al,0x60
+ push    eax
+
+ call    a20wait
+ mov     al,0xD1
+ out     0x64,al
+
+ call    a20wait
+ pop     eax
+ or      al,2
+ out     0x60,al
+
+ call    a20wait
+ mov     al,0xAE
+ out     0x64,al
+
+ call    a20wait
+ ret
+
+a20wait:
+  in      al,0x64
+  test    al,2
+  jnz     a20wait
+  ret
+
+
+a20wait2:
+  in      al,0x64
+  test    al,1
+  jz      a20wait2
+  ret
+
+enable_a20_3:
+  in al, 0x92
+  or al, 2
+  out 0x92, al
+  
+  ret
 
 print_booting:
   mov ax, 0xb800

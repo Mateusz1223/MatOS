@@ -1,7 +1,7 @@
 #include "inc/UI/terminal.h"
 
 #include "inc/UI/UIManager.h"
-#include "inc/drivers/VGA.h" // just for colors
+#include "inc/drivers/VGA.h"
 #include "inc/memory/heap.h"
 
 //___________________________________________________________________________________________________
@@ -56,6 +56,10 @@ static void put_character(Terminal *this, char ch){
 		}
 		
 		default:{
+			if(ch < 32 || ch > 126){
+				put_character(this, '.');
+				//terminal_print(this, "\\%x", (unsigned int)ch);
+			}
 			int pos = (this->cursorY * this->width + this->cursorX)*2;
 			
 			this->buffer[pos] = ch;
@@ -160,6 +164,10 @@ void terminal_init(Terminal *this, int id, bool debugMode){
 	this->processInProgress = false;
 	this->scanInProgress = false;
 
+	this->volume[0] = '\0';
+	this->volume[1] = '\0';
+	this->directoryCluster = 0;
+
 	terminal_print(this, "MATOS https://github.com/Mateusz1223/MatOS\nMateusz Piasecki https://piaseckimateusz.pl/\n\nWelcome to Terminal !!\n\n");
 
 	if(debugMode){
@@ -177,13 +185,15 @@ void terminal_init(Terminal *this, int id, bool debugMode){
 
 int terminal_print(Terminal *this, const char *str, ...) // May not work properly. May mix order
 {
+	int ret = 0;
 	if(this->scanInProgress)
-		return 0;
+		return ret;
 
 	va_list args;
 	va_start(args, str); // ????
 	
 	while(*str != '\0'){
+		ret++;
 		if(*str=='%'){
 			++str;
 			switch(*str){
@@ -219,7 +229,7 @@ int terminal_print(Terminal *this, const char *str, ...) // May not work properl
 
 	this->displayUpdated = true;
 
-	return 1;
+	return ret;
 }
 
 void terminal_clear(Terminal *this){
@@ -236,11 +246,11 @@ void terminal_clear(Terminal *this){
 	this->lastCharacterY = 0;
 }
 
-void terminal_putchar(Terminal *this, char ch){
-	char str[2];
-	str[0] = ch;
-	str[1] = 0;
-	terminal_print(this, str);
+int terminal_putchar(Terminal *this, char ch){
+	if(this->scanInProgress)
+		return 0;
+	put_character(this, ch);
+	return 1;
 }
 
 void terminal_set_color(Terminal *this, char ch){

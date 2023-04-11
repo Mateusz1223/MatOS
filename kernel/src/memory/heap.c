@@ -1,6 +1,7 @@
 #include "inc/memory/heap.h"
 
 #include "inc/UI/terminal.h"
+#include "inc/UI/UIManager.h"
 #include "inc/drivers/VGA.h"
 
 static struct HeapStructure{
@@ -8,14 +9,14 @@ static struct HeapStructure{
 	size_t size;
 } Heap;
 
+typedef struct HeapEntry HeapEntry; // ?????
+
 struct HeapEntry{
 	uint8_t *prev;
 	bool first;
 	size_t size; // without HeapEntry itself
 	bool free;
 }__attribute__((packed)); // make sure it's not alligned by compiler
-
-typedef struct HeapEntry HeapEntry; // ?????
 
 //_________________________________________________________________________________________
 
@@ -91,6 +92,10 @@ void *heap_malloc(size_t size){
 			it += entry->size;
 		}
 	}
+
+	terminal_set_color(debugTerminal, LIGHT_RED);
+	terminal_print(debugTerminal, "[Heap error] Heap full. Cannot allocate memory\n");
+	terminal_set_color(debugTerminal, LIGHT_GREEN);
 
 	return 0; // Error, sufficient memory block hasn't been found
 }

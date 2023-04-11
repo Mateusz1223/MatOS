@@ -8,13 +8,16 @@
 #include "inc/drivers/timers/PIT.h"
 #include "inc/drivers/system.h"
 #include "inc/multitasking.h"
+#include "inc/drivers/busses/ATA.h"
+#include "inc/filesystem/filesystem.h"
 
 #include "inc/UI/UIManager.h"
 #include "inc/UI/terminal.h"
 
-#include "inc/drivers/busses/ATA.h"
-
 void print_welcome_sign();
+
+uint8_t write_buffer[10*512];
+uint8_t read_buffer[10*512];
 
 void _start(bootinfo* bootInfo){
 	VGA_init(bootInfo);
@@ -24,9 +27,9 @@ void _start(bootinfo* bootInfo){
 	keyboard_init();
 	RTC_init();
 	PIT_init();
+	filesystem_init();
 	ATA_init();
 	system_init();
-	multitasking_init();
 
 	print_welcome_sign();
 

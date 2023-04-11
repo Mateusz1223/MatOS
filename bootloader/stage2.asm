@@ -3,7 +3,6 @@ org 7E00h
 
 jmp start
 
-%include "bootloader\common.inc"
 %include "bootloader\bootinfo.inc"
 %include "bootloader\gdt.inc"
 %include "bootloader\detect_memory.inc"
@@ -54,8 +53,6 @@ mov ss,ax
 
 mov esp, 0x0007FFF0 ;0x00007E00-0x0007FFFF	480.5 KiB	RAM (guaranteed free for use)	Conventional memory (stack here)
 
-call enable_a20
-
 call load_kernel
 mov ecx, eax
 
@@ -66,5 +63,52 @@ lea ebx, [boot_info]
 push ebx
 
 call ecx ;call kernel
+
+; PhysicalAddress = Segment * 16 + Offset so 0x1000:0000 is equal to 0x10000
+load_kernel: ; ret eax = entry point , edx = ImageBase, edi = SizeOfImage
+  mov eax, [0x00010000+0x3C];PE offset
+
+  xor ecx, ecx
+  mov ecx, [0x00010000+eax+0x50] ;SizeOfImage
+  push ecx; push SizeOfImage
+
+  xor ecx, ecx
+  mov cx, [0x00010000+eax+6] ;number of sections
+
+  mov edx, [0x00010000+eax+0x34] ;image base
+  push edx ; push ImageBase
+
+  xor ebx, ebx
+  mov bx, [0x00010000+eax+0x14];optional Header Size
+  add ebx, 0x00010000+0x18
+  add ebx, eax; ebx - section table
+
+  mov eax,[0x00010000+eax+0x28]
+  add eax, edx ;eax - AddressOfEntryPoint
+
+  .l1:
+
+  push ecx
+
+  mov ecx, [ebx+0x10];SizeOfRawData
+  mov edi, [ebx+0xC];VirtualAdress
+  mov esi, [ebx+0x14];PointerToRawData
+
+  add edi, edx
+  add esi, 0x00010000
+
+  cld
+  rep movsb 
+
+  add ebx, 0x28 
+  pop ecx
+
+  cmp ecx, 5
+  loop .l1
+
+  pop edx ; edx = ImageBase
+  pop edi ; edi = SizeOfImage
+
+  ret
 
 times 1024-($-$$) db 0

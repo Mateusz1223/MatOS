@@ -6,6 +6,8 @@
 #include "inc/drivers/keyboard.h"
 #include "inc/memory/heap.h"
 #include "inc/drivers/system.h"
+#include "inc/filesystem/filesystem.h"
+#include "inc/filesystem/directory.h"
 
 #define MAX_TERMINAL_NUM 5
 #define MAX_INPUT_BUFFER_SIZE 500
@@ -127,6 +129,76 @@ static void delete_terminal(int id){
 	//terminal_print(debugTerminal, "Deleted terminal, number of active terminals: %d\n", UIManager.terminalNum); // DEBUG
 }
 
+/*static void cd(){
+	if(UIManager.termInputBuffers[UIManager.currTerminal][2] == '\0'){
+		terminal_print(UIManager.terminals[UIManager.currTerminal], "Invalid syntax\n");
+		return;
+	}
+	else{
+		Directory *directory = filesystem_read_directory(&UIManager.termInputBuffers[UIManager.currTerminal][3], UIManager.terminals[UIManager.currTerminal]->volume,
+														 UIManager.terminals[UIManager.currTerminal]->directoryCluster);
+		int cluster = directory_find_directory(directory, name); //// Nooooooooooo !!!!!
+		if(cluster == 0)
+			terminal_print(UIManager.terminals[UIManager.currTerminal], "Invalid path\n");
+		else{
+			if(UIManager.terminals[UIManager.currTerminal]->volume[0] == '\0'){
+				char *pointer = &UIManager.termInputBuffers[UIManager.currTerminal][3];
+				while(pointer[0] == '\\' || pointer[0] == '/')
+					pointer++;
+				UIManager.terminals[UIManager.currTerminal]->volume[0] = pointer[0];
+				UIManager.terminals[UIManager.currTerminal]->volume[1] = pointer[1];
+			}
+			UIManager.terminals[UIManager.currTerminal]->volumeCluster = cluster;
+		}
+	}
+}*/
+
+static void dir(){
+	if(UIManager.termInputBuffers[UIManager.currTerminal][3] == '\0'){
+		// Print relative directory
+		Directory *directory = filesystem_read_directory("\\", UIManager.terminals[UIManager.currTerminal]->volume,
+														 UIManager.terminals[UIManager.currTerminal]->directoryCluster);
+		if(directory == 0)
+			terminal_print(UIManager.terminals[UIManager.currTerminal], "Error while reading local directory\n");
+		else{
+			directory_print(directory, UIManager.terminals[UIManager.currTerminal]);
+			directory_clear(directory);
+			heap_free(directory);
+		}
+		terminal_print(UIManager.terminals[UIManager.currTerminal], "\n");
+	}
+	else{
+		Directory *directory = filesystem_read_directory(&UIManager.termInputBuffers[UIManager.currTerminal][4],
+														 UIManager.terminals[UIManager.currTerminal]->volume,
+														 UIManager.terminals[UIManager.currTerminal]->directoryCluster);
+		if(directory == 0)
+			terminal_print(UIManager.terminals[UIManager.currTerminal], "Invalid path\n");
+		else{
+			directory_print(directory, UIManager.terminals[UIManager.currTerminal]);
+			directory_clear(directory);
+			heap_free(directory);
+		}
+		terminal_print(UIManager.terminals[UIManager.currTerminal], "\n");
+	}
+}
+
+static void type(){
+	if(UIManager.termInputBuffers[UIManager.currTerminal][4] == '\0')
+		terminal_print(UIManager.terminals[UIManager.currTerminal], "Invalid syntax\n");
+	else{
+		char *file = filesystem_read_file(&UIManager.termInputBuffers[UIManager.currTerminal][5],
+											UIManager.terminals[UIManager.currTerminal]->volume,
+											UIManager.terminals[UIManager.currTerminal]->directoryCluster);
+		if(file == 0)
+			terminal_print(UIManager.terminals[UIManager.currTerminal], "Invalid path\n");
+		else{
+			terminal_print(UIManager.terminals[UIManager.currTerminal], file);
+			heap_free(file);
+		}
+		terminal_print(UIManager.terminals[UIManager.currTerminal], "\n");
+	}
+}
+
 //_____________________________________________________________________________
 
 void UI_manager_init(){
@@ -214,13 +286,14 @@ void UI_manager_get_display_size(int *x, int *y){
 	*y = UIManager.height - UIManager.taskbarHeight;
 }
 
-void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
-{
+void UI_manager_PIT_irq_resident(){ // updates taskbar and terminal display
+
 	if(UIManager.terminals[UIManager.currTerminal] != UIManager.terminals[0] &&!UIManager.terminals[UIManager.currTerminal]->scanInProgress && !UIManager.terminals[UIManager.currTerminal]->processInProgress){
 		bool terminal_closed = false;
-		if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "help")){
+		if(UIManager.termInputBuffers[UIManager.currTerminal][0] == '\0');
+		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "help")){
 			terminal_print(UIManager.terminals[UIManager.currTerminal],
-				"Type:\n\thelp -> to see help message\n\tcls -> to clear screen\n\tsys -> to show system informations\n\tclose -> to close this terminal\n\tno more features yet\n\n");
+				"Type:\n\tclose -> to close this terminal\n\tcls -> to clear screen\n\tdir [<path>] -> to list directory contents\n\tsys -> to show system informations\n\ttype [<path><filename>] -> to display the contents of a text file\n\n");
 		}
 		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "cls")){
 			terminal_clear(UIManager.terminals[UIManager.currTerminal]);
@@ -231,6 +304,15 @@ void UI_manager_PIT_irq_resident() // updates taskbar and terminal display
 		else if(strcmp(UIManager.termInputBuffers[UIManager.currTerminal], "close")){
 			delete_terminal(UIManager.currTerminal);
 			terminal_closed = true;
+		}
+		/*else if(strcmpn(UIManager.termInputBuffers[UIManager.currTerminal], "cd", 2)){
+			cd();
+		}*/
+		else if(strcmpn(UIManager.termInputBuffers[UIManager.currTerminal], "dir", 3)){
+			dir();
+		}
+		else if(strcmpn(UIManager.termInputBuffers[UIManager.currTerminal], "type", 4)){
+			type();
 		}
 		else{
 			terminal_set_color(UIManager.terminals[UIManager.currTerminal], LIGHT_RED);

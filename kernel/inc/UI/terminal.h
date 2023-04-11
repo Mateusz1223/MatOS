@@ -37,6 +37,9 @@ typedef struct Terminal{
 
 	ScanBuffer scanBuffer;
 
+	char volume[2];
+	uint32_t directoryCluster;
+
 	// states
 	bool processInProgress;
 	bool scanInProgress;
@@ -49,7 +52,7 @@ void terminal_init(Terminal *this, int id, bool debugMode);
 
 void terminal_clear(Terminal *this);
 int terminal_print(Terminal *this, const char *str, ...); // returns 0 when print was not possible, 1 when executed properly
-void terminal_putchar(Terminal *this, char ch);
+int terminal_putchar(Terminal *this, char ch);
 void terminal_set_color(Terminal *this, char ch);
 
 // Functions for UI manager keyboard irq resident

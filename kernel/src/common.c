@@ -27,7 +27,15 @@ int strcmp(const char * str1, const char * str2){ // returns 0 if strings differ
 	for(int i=0; i>=0; i++){
 		if(str1[i] != str2[i])
 			return 0;
+		if(str1[i] == 0)
+			return 1;
+	}
+}
 
+int strcmpn(const char * str1, const char * str2, uint32_t n){ // returns 0 if strings different, 1 if the same
+	for(int i=0; i<n; i++){
+		if(str1[i] != str2[i])
+			return 0;
 		if(str1[i] == 0)
 			return 1;
 	}

@@ -14,7 +14,7 @@ To compile MatOS type:
 
 Note that build.py script uses programs such as `nasm`, `strip` or `gcc`, that need to be available in the project folder or added to PATH.
 
-`build.py` will create 64MB `matos.img` file in `/build` folder which you can use as a disk image on emulators or you can write it on storage device using programs such like `rufus` and run it on a real hardware.
+`build.py` will create 64MB `matos.img` file in `/build` folder which you can use as a disk image on emulators or you can write it on a storage device using programs like `rufus` and run it on a real hardware.
 
 Welcome screen:
 
@@ -27,6 +27,10 @@ Terminal:
 System informations:
 
 <img src="img/bochs.png" width="700">
+
+Reading files and directories:
+
+<img src="img/3.png" width="700">
 
 MatOS on real computer:
 

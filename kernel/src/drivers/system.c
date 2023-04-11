@@ -57,7 +57,7 @@ void system_print_informations(Terminal *term){
     terminal_print(term, "\tCPU's brand string: %s\n", System.CPUBrandStr);
     terminal_print(term, "\tCPU's model number: %x\n", System.CPUModel);
     terminal_print(term, "Memory\n");
-    terminal_print(term, "\tAvailable memory: %dMB\n", memory_get_available()/1024/1024);
+    terminal_print(term, "\tAvailable memory: %uMB\n", memory_get_available() / 1024 / 1024);
     terminal_print(term, "IDE bus\n");
     bool none = true;
     for(int id=0; id<4; id++){

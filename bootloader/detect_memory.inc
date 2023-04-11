@@ -52,3 +52,31 @@ BiosGetMemoryMap:
 	call error
 .done:
 	ret
+	
+error:
+  ;print error
+  mov ax, 0xb800
+  mov es, ax
+  xor di, di
+
+  mov word [es:di], 0x8445
+  add di, 2
+
+  mov word [es:di], 0x8452
+  add di, 2
+
+  mov word [es:di], 0x8452
+  add di, 2
+
+  mov word [es:di], 0x844f
+  add di, 2
+
+  mov word [es:di],  0x8452
+  add di, 2
+
+  mov word [es:di],  0x8421
+  add di, 2
+
+  jmp $
+
+  ret
